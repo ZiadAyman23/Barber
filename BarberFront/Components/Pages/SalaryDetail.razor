@@ -1,0 +1,349 @@
+@page "/salarydetails/{id}/{barberId}"
+@attribute [Authorize]
+@using static Core.Models.Attendance
+@inject SalaryService salaryService
+@inject BarberService barberService
+@inject IJSRuntime jsRuntime
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+<div class="salary-page">
+
+    <!-- Header / Summary Card -->
+    <div class="card shadow-sm border-0 mb-4 summary-card overflow-hidden">
+        <div class="card-header bg-dark text-white d-flex align-items-center justify-content-between py-3">
+            <h5 class="mb-0 fw-semibold">
+                <i class="bi bi-cash-coin me-2 text-primary"></i> Salary Details
+            </h5>
+            <span class="badge bg-primary fs-6 px-3 py-2">
+                @salaryDetails.BarberName
+            </span>
+        </div>
+
+        <div class="card-body">
+            <div class="row g-4">
+
+                <div class="col-6 col-md-3">
+                    <div class="stat-box">
+                        <div class="stat-label"><i class="bi bi-person-badge me-1"></i> Barber</div>
+                        <div class="stat-value">@salaryDetails.BarberName</div>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-3">
+                    <div class="stat-box">
+                        <div class="stat-label"><i class="bi bi-calendar-range me-1"></i> Period</div>
+                        <div class="stat-value small">
+                            @salaryDetails.StartDate.ToString("dd/MM/yyyy")
+                            <i class="bi bi-arrow-right mx-1"></i>
+                            @salaryDetails.EndDate.ToString("dd/MM/yyyy")
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-3">
+                    <div class="stat-box">
+                        <div class="stat-label"><i class="bi bi-wallet2 me-1"></i> Basic Salary</div>
+                        <div class="stat-value text-success">@salaryDetails.Salary.ToString("N2") <small>EGP</small></div>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-3">
+                    <div class="stat-box">
+                        <div class="stat-label"><i class="bi bi-dash-circle me-1"></i> Total Deductions</div>
+                        <div class="stat-value text-danger">@salaryDetails.Deduction.ToString("N2") <small>EGP</small></div>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <div class="net-salary-box">
+                        <span class="net-label"><i class="bi bi-check-circle-fill me-2"></i>Net Salary</span>
+                        <span class="net-value">@salaryDetails.FinalSalary.ToString("N2") EGP</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Deductions Table -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-light d-flex align-items-center">
+            <i class="bi bi-list-ul me-2 text-danger"></i>
+            <h6 class="mb-0">Deductions</h6>
+            <span class="badge bg-danger-subtle text-danger ms-2">@deductions.Count</span>
+        </div>
+        <div class="card-body p-0">
+            @if (deductions.Count == 0)
+            {
+                <div class="empty-state">
+                    <i class="bi bi-inboxes"></i>
+                    <p>No deductions recorded for this period</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col">Amount</th>
+                                <th scope="col">Reason</th>
+                                <th scope="col">Created By</th>
+                                <th scope="col">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var _item in deductions)
+                            {
+                                <tr>
+                                    <td class="text-danger fw-semibold">@_item.Amount.ToString("N2") EGP</td>
+                                    <td>@_item.Reason</td>
+                                    <td>
+                                        <span class="badge bg-secondary-subtle text-secondary">
+                                            <i class="bi bi-person-circle me-1"></i>@_item.CreatedBy
+                                        </span>
+                                    </td>
+                                    <td>@_item.DateOnly</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Orders (percentage-based barbers) -->
+    @if (!barber.DailyPrice.HasValue && barber.HisPercent.HasValue)
+    {
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-light d-flex align-items-center">
+                <i class="bi bi-receipt me-2 text-success"></i>
+                <h6 class="mb-0">Orders</h6>
+                <span class="badge bg-success-subtle text-success ms-2">@orders.Count</span>
+            </div>
+            <div class="card-body p-0">
+                @if (orders.Count == 0)
+                {
+                    <div class="empty-state">
+                        <i class="bi bi-receipt-cutoff"></i>
+                        <p>No orders recorded for this period</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col">Amount</th>
+                                    <th scope="col">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var _item in orders)
+                                {
+                                    <tr>
+                                        <td class="text-success fw-semibold">@_item.TotalPrice.ToString("N2") EGP</td>
+                                        <td>@_item.Date</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    else if (barber.DailyPrice.HasValue && !barber.HisPercent.HasValue)
+    {
+        <div class="row g-4 mb-4">
+
+            <!-- Present -->
+            <div class="col-md-6">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-light d-flex align-items-center">
+                        <i class="bi bi-calendar-check me-2 text-success"></i>
+                        <h6 class="mb-0">Present</h6>
+                        <span class="badge bg-success-subtle text-success ms-2">@PresentAttendances.Count</span>
+                    </div>
+                    <div class="card-body p-0">
+                        @if (PresentAttendances.Count == 0)
+                        {
+                            <div class="empty-state">
+                                <i class="bi bi-calendar-x"></i>
+                                <p>No present days recorded</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th scope="col">Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var _item in PresentAttendances)
+                                        {
+                                            <tr>
+                                                <td>@_item.Date</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Absent -->
+            <div class="col-md-6">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-light d-flex align-items-center">
+                        <i class="bi bi-calendar-x me-2 text-danger"></i>
+                        <h6 class="mb-0">Absent</h6>
+                        <span class="badge bg-danger-subtle text-danger ms-2">@AbsentAttendances.Count</span>
+                    </div>
+                    <div class="card-body p-0">
+                        @if (AbsentAttendances.Count == 0)
+                        {
+                            <div class="empty-state">
+                                <i class="bi bi-calendar-check"></i>
+                                <p>No absent days recorded</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th scope="col">Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var _item in AbsentAttendances)
+                                        {
+                                            <tr>
+                                                <td>@_item.Date</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    }
+
+</div>
+
+<style>
+    .salary-page {
+        max-width: 960px;
+        margin: 0 auto;
+    }
+
+    .summary-card .card-header {
+        border-radius: 0.5rem 0.5rem 0 0;
+    }
+
+    .stat-box {
+        background: #f8f9fa;
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        height: 100%;
+    }
+
+    .stat-label {
+        font-size: 0.8rem;
+        color: #6c757d;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-value {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #212529;
+    }
+
+    .net-salary-box {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #1e293b;
+        color: #ffffff;
+        border-radius: 0.75rem;
+        padding: 1rem 1.5rem;
+    }
+
+    .net-label {
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    .net-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #10b981;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 2.5rem 1rem;
+        color: #adb5bd;
+    }
+
+        .empty-state i {
+            font-size: 2rem;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state p {
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+    .table > :not(caption) > * > * {
+        padding: 0.75rem 1rem;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public string id { get; set; }
+    [Parameter]
+    public string barberId { get; set; }
+
+    BarberMV barber = new BarberMV();
+    SalaryDetails salaryDetails = new SalaryDetails();
+    List<OrderMV> orders = new List<OrderMV>();
+    List<AttendanceMV> attendances = new List<AttendanceMV>();
+    List<DeductionMV> deductions = new List<DeductionMV>();
+    bool BarberType = false;
+
+    List<AttendanceMV> PresentAttendances => attendances.Where(a => a.Status == AttendanceStatus.Present.ToString()).ToList();
+    List<AttendanceMV> AbsentAttendances => attendances.Where(a => a.Status == AttendanceStatus.Absent.ToString()).ToList();
+
+    public async Task LaodData()
+    {
+        barber = await barberService.GetBarberById(barberId);
+        salaryDetails = await salaryService.GetSalaryDetails(id);
+        orders = salaryDetails.orderMVs;
+        attendances = salaryDetails.Attendances;
+        deductions = salaryDetails.DeductionMVs;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LaodData();
+    }
+}

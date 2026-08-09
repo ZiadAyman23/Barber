@@ -1,0 +1,224 @@
+@page "/salary"
+@attribute [Authorize]
+@inject SalaryService salaryService
+@inject IJSRuntime jsRuntime
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+<div class="container mt-4 mb-4">
+
+    <div class="row align-items-center mb-4">
+
+        <div class="col">
+
+            <h2 class="fw-bold text-dark d-flex align-items-center gap-2">
+                <i class="bi bi-cash-stack text-primary"></i> Salary Management
+            </h2>
+
+            <p class="text-muted mb-0">
+                View current barber earnings and calculate monthly salaries.
+            </p>
+
+        </div>
+
+    </div>
+
+    <div class="card border-0 shadow-sm overflow-hidden">
+        <table class="table mb-0 align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Barber</th>
+                    <th scope="col">Basic Salary</th>
+                    <th scope="col">Deductions</th>
+                    <th scope="col">Final Salary</th>
+                    <th scope="col">Orders</th>
+                    <th scope="col">Attendance</th>
+                    <th scope="col" class="text-end">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var _item in salaries)
+                {
+                    <tr>
+                        <td class="fw-semibold text-dark">@_item.BarberName</td>
+                        <td>
+                            @if (_item.SalaryAmount == 0)
+                            {
+                                <span class="text-muted fs-7">No Salary</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-light text-dark border px-3 py-2 fs-6">@_item.SalaryAmount.ToString("N2") EGP</span>
+                            }
+                        </td>
+                        <td>
+                            @if (_item.DeductionAmount == 0)
+                            {
+                                <span class="text-muted fs-7">No Deduction</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger-subtle text-danger px-3 py-2 fs-6">@_item.DeductionAmount.ToString("N2") EGP</span>
+                            }
+                        </td>
+                        <td>
+                            @if (_item.TotalSalary == 0)
+                            {
+                                <span class="text-muted fs-7">No Salary</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success-subtle text-success px-3 py-2 fs-6 fw-bold">@_item.TotalSalary.ToString("N2") EGP</span>
+                            }
+                        </td>
+                        <td>
+                            @if (_item.OrderCount == 0)
+                            {
+                                <span class="text-muted fs-7">0</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary-subtle text-secondary px-2 py-1">@_item.OrderCount orders</span>
+                            }
+                        </td>
+                        <td>
+                            @if (_item.AttendanceCount == 0)
+                            {
+                                <span class="text-muted fs-7">0</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-info-subtle text-info-emphasis px-2 py-1">@_item.AttendanceCount days</span>
+                            }
+                        </td>
+                        <td class="text-end">
+                            @if (_item.TotalSalary > 0)
+                            {
+                                <button class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1" @onclick="() => OpenPaySalary(_item)">
+                                    <i class="bi bi-credit-card me-1"></i> Pay Salary
+                                </button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+@if (IsAddSalaryOpen)
+{
+    <div class="modal fade show d-block"
+         style="background-color:rgba(0,0,0,.5)">
+
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5>Pay Salary</h5>
+                    <button class="btn-close"
+                            @onclick="ClosePaySalary">
+                    </button>
+                </div>
+
+                <div class="modal-body">
+
+                    <div class="alert alert-light border mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="text-muted fs-7">Barber</span>
+                            <span class="fw-semibold text-dark">@currentSalary1.BarberName</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted fs-7">Final Salary to Pay</span>
+                            <span class="fw-bold text-success fs-5">@currentSalary1.TotalSalary.ToString("N2") EGP</span>
+                        </div>
+                    </div>
+
+                    <EditForm Model="@checkAccess" OnValidSubmit="PaySalary">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div class="mb-3">
+                            <label class="form-label">Admin Password</label>
+                            <input type="password" class="form-control" @bind="checkAccess.pass" placeholder="Enter password to confirm payout" />
+                            <ValidationMessage For="@(() => checkAccess.pass)" />
+                        </div>
+
+                        <div class="text-end">
+                            <button type="button" class="btn btn-secondary me-2"
+                                    @onclick="ClosePaySalary">
+                                Cancel
+                            </button>
+
+                            <button type="submit" class="btn btn-success px-4">
+                                Confirm & Pay
+                            </button>
+                        </div>
+                    </EditForm>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+}
+
+
+
+@code {
+
+    List<CurrentSalary> salaries = new List<CurrentSalary>();
+    public async Task LoadSalaries()
+    {
+        salaries = await salaryService.GetCurrentSalaries();
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSalaries();
+    }
+
+
+    bool IsAddSalaryOpen = false;
+    CurrentSalary currentSalary1 = new CurrentSalary();
+    CheckAccess checkAccess = new CheckAccess();
+    public void OpenPaySalary(CurrentSalary currentSalary)
+    {
+        currentSalary1 = currentSalary;
+        checkAccess = new CheckAccess();
+        IsAddSalaryOpen = true;
+    }
+
+    public void ClosePaySalary()
+    {
+        IsAddSalaryOpen = false;
+        currentSalary1 = new CurrentSalary();
+        checkAccess = new CheckAccess();
+    }
+
+    public async Task PaySalary()
+    {
+        SalaryD AddSalary = new SalaryD
+        {
+            BarberID = currentSalary1.BarberID,
+            SalaryAmount = currentSalary1.SalaryAmount,
+            DeductionAmount = currentSalary1.DeductionAmount,
+            TradeAmount = currentSalary1.TotalSalary,
+            LastUpdated = currentSalary1.LastUpdated
+        };
+
+        await jsRuntime.InvokeVoidAsync("showLoading");
+        var result = await salaryService.AddSalary(AddSalary, checkAccess);
+        await jsRuntime.InvokeVoidAsync("hideLoading");
+
+        if (!result.Status)
+        {
+            await jsRuntime.InvokeVoidAsync("showToast2", result.StatusMessage);
+            return;
+        }
+
+        ClosePaySalary();
+        await LoadSalaries();
+        await jsRuntime.InvokeVoidAsync("showToast", result.StatusMessage);
+
+    }
+}

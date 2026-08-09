@@ -1,0 +1,17 @@
+D:\cSharb\Barbershop\Infrastructer\bin\Debug\net10.0\Infrastructer.deps.json
+D:\cSharb\Barbershop\Infrastructer\bin\Debug\net10.0\Infrastructer.runtimeconfig.json
+D:\cSharb\Barbershop\Infrastructer\bin\Debug\net10.0\Infrastructer.dll
+D:\cSharb\Barbershop\Infrastructer\bin\Debug\net10.0\Infrastructer.pdb
+D:\cSharb\Barbershop\Infrastructer\bin\Debug\net10.0\Core.dll
+D:\cSharb\Barbershop\Infrastructer\bin\Debug\net10.0\Core.pdb
+D:\cSharb\Barbershop\Infrastructer\obj\Debug\net10.0\Infrastructer.csproj.AssemblyReference.cache
+D:\cSharb\Barbershop\Infrastructer\obj\Debug\net10.0\Infrastructer.GeneratedMSBuildEditorConfig.editorconfig
+D:\cSharb\Barbershop\Infrastructer\obj\Debug\net10.0\Infrastructer.AssemblyInfoInputs.cache
+D:\cSharb\Barbershop\Infrastructer\obj\Debug\net10.0\Infrastructer.AssemblyInfo.cs
+D:\cSharb\Barbershop\Infrastructer\obj\Debug\net10.0\Infrastructer.csproj.CoreCompileInputs.cache
+D:\cSharb\Barbershop\Infrastructer\obj\Debug\net10.0\Infrastr.BFACB794.Up2Date
+D:\cSharb\Barbershop\Infrastructer\obj\Debug\net10.0\Infrastructer.dll
+D:\cSharb\Barbershop\Infrastructer\obj\Debug\net10.0\refint\Infrastructer.dll
+D:\cSharb\Barbershop\Infrastructer\obj\Debug\net10.0\Infrastructer.pdb
+D:\cSharb\Barbershop\Infrastructer\obj\Debug\net10.0\Infrastructer.genruntimeconfig.cache
+D:\cSharb\Barbershop\Infrastructer\obj\Debug\net10.0\ref\Infrastructer.dll

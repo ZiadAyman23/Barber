@@ -1,0 +1,383 @@
+@page "/item"
+@attribute [Authorize]
+@inject ItemService ItemService
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@inject IJSRuntime JS
+
+<div class="container mt-4">
+
+    <div class="row align-items-center mb-4">
+
+        <div class="col">
+
+            <h2 class="fw-bold text-dark d-flex align-items-center gap-2">
+                <i class="bi bi-grid-fill text-primary"></i> Item Management
+            </h2>
+
+            <p class="text-muted mb-0">
+                Manage your barbershop items and prices.
+            </p>
+
+        </div>
+
+        <div class="col-auto">
+
+            <button class="btn btn-success px-4 d-flex align-items-center gap-2"
+                    @onclick="OpenAddForm">
+                <i class="bi bi-plus-lg"></i> Add Item
+            </button>
+
+        </div>
+
+    </div>
+
+    <div class="card border-0 shadow-sm overflow-hidden">
+        <table class="table mb-0 align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Service Name</th>
+                    <th scope="col">Price</th>
+                    <th scope="col" class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var _item in itemMVs)
+                {
+                    <tr>
+                        <td class="fw-medium text-dark">@_item.Name</td>
+                        <td><span class="badge bg-light text-dark border px-3 py-2 fs-6">@_item.Price.ToString("N2") EGP</span></td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-primary me-2" @onclick="() => OpenEditForm(_item)">
+                                <i class="bi bi-pencil me-1"></i> Edit
+                            </button>
+                            <button class="btn btn-sm btn-danger" @onclick="() => OpenDeleteConfirmation(_item)">
+                                <i class="bi bi-trash me-1"></i> Delete
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+@if (ShowEditForm)
+{
+    <div class="modal fade show d-block"
+         style="background-color:rgba(0,0,0,.5)">
+
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5>Edit Item</h5>
+                    <button class="btn-close"
+                            @onclick="CloseForm">
+                    </button>
+                </div>
+
+                <div class="modal-body">
+
+                    <EditForm Model="@itemD" OnValidSubmit="SaveEditForm">
+
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div class="mb-3">
+                            <label class="form-label">
+                                Name
+                            </label>
+
+                            <InputText class="form-control"
+                                       @bind-Value="itemD.Name" />
+
+                            <ValidationMessage For="@(() => itemD.Name)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">
+                                Price
+                            </label>
+
+                            <InputNumber class="form-control"
+                                         @bind-Value="itemD.Price" />
+
+                            <ValidationMessage For="@(() => itemD.Price)" />
+                        </div>
+
+                        <div class="text-end">
+                            <button type="button"
+                                    class="btn btn-secondary me-2"
+                                    @onclick="CloseForm">
+                                Cancel
+                            </button>
+
+                            <button type="submit"
+                                    class="btn btn-success">
+                                Edit
+                            </button>
+                        </div>
+
+                    </EditForm>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+}
+
+
+@if (ShowDeleteConfirmation)
+{
+    <div class="modal fade show d-block"
+         style="background-color:rgba(0,0,0,.5)">
+
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5>Delete Item</h5>
+                    <button class="btn-close"
+                            @onclick="CloseDeleteConfirmation">
+                    </button>
+                </div>
+
+                <div class="modal-body">
+
+                    <EditForm Model="@checkAccess" OnValidSubmit="ConfirmDelete">
+
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div class="mb-3">
+                            <label class="form-label">
+                                Password
+                            </label>
+
+                            <input type="password" class="form-control"
+                                         @bind="checkAccess.pass" />
+
+                            <ValidationMessage For="@(() => checkAccess.pass)" />
+                        </div>
+
+                        <div class="text-end">
+                            <button type="button"
+                                    class="btn btn-secondary me-2"
+                                    @onclick="CloseDeleteConfirmation">
+                                Cancel
+                            </button>
+
+                            <button type="submit"
+                                    class="btn btn-danger">
+                                Delete
+                            </button>
+                        </div>
+
+                    </EditForm>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+}
+
+
+
+@if (ShowAddForm)
+{
+    <div class="modal fade show d-block"
+         style="background-color:rgba(0,0,0,.5)">
+
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5>Add Item</h5>
+                    <button class="btn-close"
+                            @onclick="CloseAddForm">
+                    </button>
+                </div>
+
+                <div class="modal-body">
+
+                    <EditForm Model="@itemD2" OnValidSubmit="SaveAddForm">
+
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div class="mb-3">
+                            <label class="form-label">
+                                Name
+                            </label>
+
+                            <InputText class="form-control"
+                                       @bind-Value="itemD2.Name" />
+
+                            <ValidationMessage For="@(() => itemD2.Name)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">
+                                Price
+                            </label>
+
+                            <InputNumber class="form-control"
+                                         @bind-Value="itemD2.Price" />
+
+                            <ValidationMessage For="@(() => itemD2.Price)" />
+                        </div>
+
+                        <div class="text-end">
+                            <button type="button"
+                                    class="btn btn-secondary me-2"
+                                    @onclick="CloseAddForm">
+                                Cancel
+                            </button>
+
+                            <button type="submit"
+                                    class="btn btn-success">
+                                Add
+                            </button>
+                        </div>
+
+                    </EditForm>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+}
+
+
+@code {
+
+    List<ItemMV> itemMVs = new List<ItemMV>();
+    protected override async Task OnInitializedAsync() => itemMVs = await ItemService.GetAllItems();
+    // Add your code here for managing items, such as opening modals, saving edits, and deleting items.---------------
+
+    bool ShowEditForm = false;
+
+    ItemD itemD = new ItemD();
+    string? ItemID ;
+
+    void OpenEditForm(ItemMV itemMV)
+    {
+
+        ShowEditForm = true;
+        ItemID = itemMV.Id;
+        itemD.Name = itemMV.Name;
+        itemD.Price = itemMV.Price;
+    }
+
+    async Task SaveEditForm()
+    {
+
+        await JS.InvokeVoidAsync("showLoading");
+
+        var respons = await ItemService.UpdateItem(itemD,ItemID);
+
+
+        await JS.InvokeVoidAsync("hideLoading");
+
+
+        itemMVs = await ItemService.GetAllItems();
+
+
+        ShowEditForm = false;
+
+        if(!respons.Status)
+        {
+            await JS.InvokeVoidAsync("showToast2",respons.StatusMessage);
+            return;
+        }
+
+        await JS.InvokeVoidAsync("showToast", respons.StatusMessage);
+
+    }
+
+    void CloseForm()
+    {
+
+        ShowEditForm = false;
+    }
+
+    //Delete Item---------------------------
+
+    bool ShowDeleteConfirmation = false;
+    CheckAccess checkAccess = new CheckAccess();
+    void OpenDeleteConfirmation(ItemMV itemMV)
+    {
+        ItemID = itemMV.Id;
+        checkAccess = new CheckAccess();
+        ShowDeleteConfirmation = true;
+    }
+    void CloseDeleteConfirmation()
+    {
+        ShowDeleteConfirmation = false;
+        checkAccess = new CheckAccess();
+    }
+    async Task ConfirmDelete()
+    {
+        await JS.InvokeVoidAsync("showLoading");
+
+        var respons = await ItemService.DeleteItem(ItemID, checkAccess);
+
+        await JS.InvokeVoidAsync("hideLoading");
+        ShowDeleteConfirmation = false;
+        checkAccess = new CheckAccess();
+        itemMVs = await ItemService.GetAllItems();
+
+        if(!respons.Status)
+        {
+            await JS.InvokeVoidAsync("showtOAST2",respons.StatusMessage);
+            return;
+        }
+
+        await JS.InvokeVoidAsync("showToast",respons.StatusMessage);
+    }
+
+    // Add Item Form--------------------
+    bool ShowAddForm = false;
+
+    ItemD itemD2 = new ItemD();
+
+    void OpenAddForm()
+    {
+
+        ShowAddForm = true;
+    }
+    void CloseAddForm()
+    {
+        ShowAddForm = false;
+    }
+    async Task SaveAddForm()
+    {
+        await JS.InvokeVoidAsync("showLoading");
+
+        var respons =  await ItemService.AddItem(itemD2);
+
+        await JS.InvokeVoidAsync("hideLoading");
+
+        itemMVs = await ItemService.GetAllItems();
+        ShowAddForm = false;
+
+        itemD2 = new ItemD();
+
+        if(!respons.Status)
+        {
+            await JS.InvokeVoidAsync("showtOAST2", respons.StatusMessage);
+            return;
+        }
+
+        await JS.InvokeVoidAsync("showToast", respons.StatusMessage);
+
+      
+
+    }
+
+}
+

@@ -1,0 +1,31 @@
+@page "/test"
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@inject IJSRuntime JS
+
+
+<h3>test</h3>
+
+
+<button class="btn btn-primary" @onclick="ShowAlert">Show Alert</button>
+<button class="btn btn-secondary" @onclick="ShowAlert2">Show Alert 2</button>
+<button class="btn btn-success" @onclick="ShowAlert3">Show Alert 3</button>
+<button class="btn btn-warning" @onclick="ShowAlert4">Show Alert 4</button>
+@code {
+    private async Task ShowAlert()
+    {
+        await JS.InvokeVoidAsync("showToast", "Operation completed successfully!");
+    }
+
+    private async Task ShowAlert2()
+    {
+        await JS.InvokeVoidAsync("showToast2", "This is another alert!");
+    }
+    private async Task ShowAlert3()
+    {
+        await JS.InvokeVoidAsync("showToast3", "This is a third alert!");
+    }
+    private async Task ShowAlert4()
+    {
+        await JS.InvokeVoidAsync("showToast4", "This is a fourth alert!");
+    }
+}

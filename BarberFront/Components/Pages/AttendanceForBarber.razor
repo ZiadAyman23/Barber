@@ -1,0 +1,93 @@
+@attribute [Authorize]
+
+
+@page "/barberAttendance/{id}"
+@inject BarberService barberService
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+<div class="container mt-4">
+
+    <div class="row align-items-center mb-4">
+
+        <div class="col">
+
+            <h2 class="fw-bold text-dark">
+                Attendance For @barberMV.Name
+            </h2>
+
+          
+
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <label class="form-label">????? ???????</label>
+                <InputDate @bind-Value="date1"
+                           max="@DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd")"
+                           class="form-control" />
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">????? ???????</label>
+                <InputDate @bind-Value="date2"
+                           max="@DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd")"
+                           class="form-control" />
+            </div>
+        </div>
+
+        <div class="mt-2">
+            <button class="btn btn-outline-primary" @onclick="Searche">
+                Search
+            </button>
+        </div>
+        <div class="mt-2">
+            <button class="btn btn-outline-primary" @onclick="AllList">
+               All Attend
+            </button>
+        </div>
+    </div>
+
+
+</div>
+
+@if (!showAll)
+{
+    <BarberAttendList id= "@id"></BarberAttendList>
+}
+else
+{
+    <BarberAttendSearch id="@id" startDate="@date1" endDate="@date2" ></BarberAttendSearch>
+}
+
+
+@code
+{
+    [Parameter]
+    public string? id { get; set; }
+    BarberMV barberMV = new BarberMV();
+
+    DateOnly date1 = DateOnly.FromDateTime(DateTime.Today);
+    DateOnly date2 = DateOnly.FromDateTime(DateTime.Today);
+
+    public async Task LoadBarber()
+    {
+        barberMV = await barberService.GetBarberById(id);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadBarber();
+    }
+
+    bool showAll = false;
+
+    public void Searche()
+    {
+        showAll = true;
+    }
+
+    public void AllList()
+    {
+        showAll = false;
+    }
+}

@@ -1,0 +1,166 @@
+@page "/paidSalary"
+@attribute [Authorize]
+@inject SalaryService salaryService
+@inject BarberService barberService
+@inject IJSRuntime jsRuntime
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+<div class="container mt-4 mb-4">
+
+    <div class="row align-items-center mb-4">
+
+        <div class="col">
+
+            <h2 class="fw-bold text-dark d-flex align-items-center gap-2">
+                <i class="bi bi-check-circle-fill text-success"></i> Paid Salary Records
+            </h2>
+
+            <p class="text-muted mb-0">
+                View history of paid salaries and barber payout details.
+            </p>
+
+        </div>
+
+    </div>
+
+    <!-- Filter Toolbar -->
+    <div class="card p-3 mb-4 border-0 shadow-sm">
+        <div class="row align-items-center g-2">
+            <div class="col-md-4">
+                <label class="form-label">Filter by Barber</label>
+                <InputSelect class="form-select" @bind-Value="selectedBarberId" @bind-Value:after="Filter">
+                    <option value="">All Barbers</option>
+                    @foreach (var barber in barbers)
+                    {
+                        <option value="@barber.Id">@barber.Name</option>
+                    }
+                </InputSelect>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm overflow-hidden">
+        <table class="table mb-0 align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Barber Name</th>
+                    <th scope="col">Start Date</th>
+                    <th scope="col">End Date</th>
+                    <th scope="col">Basic Salary</th>
+                    <th scope="col">Deductions</th>
+                    <th scope="col">Net Salary</th>
+                    <th scope="col" class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var _item in salaries)
+                {
+                    <tr>
+                        <td class="fw-semibold text-dark">@_item.BarberName</td>
+                        <td class="text-muted">@_item.startDate.ToString("dd/MM/yyyy")</td>
+                        <td class="text-muted">@_item.endDate.ToString("dd/MM/yyyy")</td>
+                        <td><span class="badge bg-light text-dark border px-3 py-2 fs-6">@_item.salary.ToString("N2") EGP</span></td>
+                        <td><span class="badge bg-danger-subtle text-danger px-3 py-2 fs-6">@_item.Deducation.ToString("N2") EGP</span></td>
+                        <td><span class="badge bg-success-subtle text-success px-3 py-2 fs-6 fw-bold">@_item.finalSalary.ToString("N2") EGP</span></td>
+                        <td class="text-end">
+                            <a class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1"
+                               href="@($"/salarydetails/{_item.ID}/{_item.BarberId}")">
+                                <i class="bi bi-file-text me-1"></i> Details
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="d-flex justify-content-center my-4">
+        <button class="btn btn-outline-secondary me-2" @onclick="PreviousPage">Previous</button>
+        <button class="btn btn-outline-secondary" @onclick="NextPage">Next</button>
+    </div>
+</div>  
+@code {
+
+    List<SalaryMV> salaries = new List<SalaryMV>();
+    List<BarberMV> barbers = new List<BarberMV>();
+    Pagenation pagenation = new Pagenation(){ PageNumber = 1, PageSize = 10 };
+    string selectedBarberId = string.Empty;
+
+    public async Task LoadData()
+    {
+        // Implementation for loading data
+        salaries = await salaryService.GetAllSalary(pagenation);
+        barbers = await barberService.GetAllBarbers();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    public async Task Filter()
+    {
+        // Implementation for filtering data based on selectedBarberId
+        if (string.IsNullOrEmpty(selectedBarberId))
+        {
+            await  LoadData();
+        }
+        else
+        {
+            salaries = await salaryService.GetSalaryByBarberId(selectedBarberId, pagenation);
+        }
+    }
+
+    public async Task NextPage()
+    {
+        pagenation.PageNumber++;
+
+        if (selectedBarberId != null)
+            await Filter();
+        else
+            await LoadData();
+
+        if (salaries.Count == 0)
+        {
+            pagenation.PageNumber--;
+
+            if (selectedBarberId != null)
+                await Filter();
+            else
+                await LoadData();
+
+            await jsRuntime.InvokeVoidAsync("showToast3", "لا توجد المزيد من البيانات المتاحة");
+        }
+    }
+
+    public async Task PreviousPage()
+    {
+        if (pagenation.PageNumber > 1)
+        {
+            pagenation.PageNumber--;
+            if (selectedBarberId != null)
+            {
+                await Filter();
+            }
+            else
+            {
+                await LoadData();
+            }
+        }
+        else
+        {
+            pagenation.PageNumber = 1;
+            if (selectedBarberId != null)
+            {
+                await Filter();
+            }
+            else
+            {
+                await LoadData();
+            }
+            await jsRuntime.InvokeVoidAsync("showToast3", "You are on the first page.");
+
+        }
+    }
+
+}

@@ -1,0 +1,419 @@
+@page "/barber"
+@attribute [Authorize]
+@inject BarberService BarberService
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@inject IJSRuntime JS
+
+
+<div class="container mt-4">
+
+    <div class="row align-items-center mb-4">
+
+        <div class="col">
+
+            <h2 class="fw-bold text-dark d-flex align-items-center gap-2">
+                <i class="bi bi-person-badge-fill text-primary"></i> Barber Management
+            </h2>
+
+            <p class="text-muted mb-0">
+                Manage your barbershop services and prices.
+            </p>
+
+        </div>
+
+        <div class="col-auto">
+
+            <button class="btn btn-success px-4 "
+                 @onclick="OpenAddBarberModal"   >
+                + Add Barber
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<div class="container">
+    <div class="card border-0 shadow-sm overflow-hidden">
+        <table class="table mb-0 align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Daily Price</th>
+                    <th scope="col">Percentage</th>
+                    <th scope="col" class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var _item in ba)
+                {
+                    <tr>
+                        <td class="fw-semibold text-dark">@_item.Name</td>
+                        <td><span class="badge bg-light text-dark border px-3 py-2 fs-6">@(_item.DailyPrice.HasValue ? $"{_item.DailyPrice:N2} EGP" : "-")</span></td>
+                        <td><span class="badge bg-info-subtle text-info-emphasis px-3 py-2 fs-6">@(_item.HisPercent.HasValue ? $"{_item.HisPercent}%" : "-")</span></td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-primary me-2" @onclick="() => OpenEditBarberModal(_item)">
+                                <i class="bi bi-pencil me-1"></i> Edit
+                            </button>
+                            <button class="btn btn-sm btn-danger" @onclick="() => OpenDeleteBarberModal(_item.Id)">
+                                <i class="bi bi-trash me-1"></i> Delete
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+@if (ShowAddBarberModal)
+{
+    <div class="modal fade show d-block"
+         style="background-color:rgba(0,0,0,.5)">
+
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5>Add Item</h5>
+                    <button class="btn-close"
+                            @onclick="CloseAddBarberModal">
+                    </button>
+                </div>
+
+                <div class="modal-body">
+
+                    <EditForm Model="@barber" OnValidSubmit="AddBarber">
+
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div class="mb-3">
+                            <label class="form-label">
+                                Name
+                            </label>
+
+                            <InputText class="form-control"
+                                       @bind-Value="barber.Name" />
+
+                            <ValidationMessage For="@(() => barber.Name)" />
+                        </div>
+
+                        <InputRadioGroup @bind-Value="PriceOrPercent">
+                            <div class="form-check">
+                                <InputRadio class="form-check-input" Value="true" />
+                                <label class="form-check-label">Daily Price</label>
+                            </div>
+
+                            <div class="form-check">
+                                <InputRadio class="form-check-input" Value="false" />
+                                <label class="form-check-label">Percentage</label>
+                            </div>
+                        </InputRadioGroup>
+
+                        @if (PriceOrPercent)
+                        {
+                            <div class="mb-3">
+                                <label class="form-label">Daily Price</label>
+
+                                <InputNumber class="form-control"
+                                             @bind-Value="barber.DailyPrice" />
+
+                                <ValidationMessage For="@(() => barber.DailyPrice)" />
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="mb-3">
+                                <label class="form-label">Percentage</label>
+
+                                <InputNumber class="form-control"
+                                             @bind-Value="barber.HisPercent" />
+
+                                <ValidationMessage For="@(() => barber.HisPercent)" />
+                            </div>
+                        }
+
+                        <div class="text-end">
+                            <button type="button"
+                                    class="btn btn-secondary me-2"
+                                    @onclick="CloseAddBarberModal">
+                                Cancel
+                            </button>
+
+                            <button type="submit"
+                                    class="btn btn-success">
+                                Add
+                            </button>
+                        </div>
+
+                    </EditForm>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+}
+
+
+
+@if (ShowDeleteBarberModal)
+{
+    <div class="modal fade show d-block"
+         style="background-color:rgba(0,0,0,.5)">
+
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5>Delete Barber</h5>
+                    <button class="btn-close"
+                            @onclick="CloseDeleteBarberModal">
+                    </button>
+                </div>
+
+                <div class="modal-body">
+
+                    <EditForm Model="@checkAccessDelete" OnValidSubmit="DeleteBarber">
+
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <input type="password" class="form-control" @bind="checkAccessDelete.pass" />
+                            <ValidationMessage For="@(() => checkAccessDelete.pass)" />
+                        </div>
+
+                        <div class="text-end">
+                            <button type="button"
+                                    class="btn btn-secondary me-2"
+                                    @onclick="CloseDeleteBarberModal">
+                                Cancel
+                            </button>
+
+                            <button type="submit"
+                                    class="btn btn-danger">
+                                Delete
+                            </button>
+                        </div>
+
+                    </EditForm>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+}
+
+
+
+@if (ShowEditBarberModal)
+{
+    <div class="modal fade show d-block"
+         style="background-color:rgba(0,0,0,.5)">
+
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5>Edit Barber</h5>
+                    <button class="btn-close"
+                            @onclick="CloseEditBarberModal">
+                    </button>
+                </div>
+
+                <div class="modal-body">
+
+                    <EditForm Model="@barberToEdit" OnValidSubmit="EditBarber">
+
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div class="mb-3">
+                            <label class="form-label">
+                                Name
+                            </label>
+
+                            <InputText class="form-control"
+                                       @bind-Value="barberToEdit.Name" />
+
+                            <ValidationMessage For="@(() => barberToEdit.Name)" />
+                        </div>
+
+                        <InputRadioGroup @bind-Value="PriceOrPercent">
+                            <div class="form-check">
+                                <InputRadio class="form-check-input" Value="true" />
+                                <label class="form-check-label">Daily Price</label>
+                            </div>
+
+                            <div class="form-check">
+                                <InputRadio class="form-check-input" Value="false" />
+                                <label class="form-check-label">Percentage</label>
+                            </div>
+                        </InputRadioGroup>
+
+                        @if (PriceOrPercent)
+                        {
+                            <div class="mb-3">
+                                <label class="form-label">Daily Price</label>
+
+                                <InputNumber class="form-control"
+                                             @bind-Value="barberToEdit.DailyPrice" />
+
+                                <ValidationMessage For="@(() => barberToEdit.DailyPrice)" />
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="mb-3">
+                                <label class="form-label">Percentage</label>
+
+                                <InputNumber class="form-control"
+                                             @bind-Value="barberToEdit.HisPercent" />
+
+                                <ValidationMessage For="@(() => barberToEdit.HisPercent)" />
+                            </div>
+                        }
+
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <input type="password" class="form-control" @bind="checkAccessEdit.pass" />
+                            <ValidationMessage For="@(() => checkAccessEdit.pass)" />
+                        </div>
+
+                        <div class="text-end">
+                            <button type="button"
+                                    class="btn btn-secondary me-2"
+                                    @onclick="CloseEditBarberModal">
+                                Cancel
+                            </button>
+
+                            <button type="submit"
+                                    class="btn btn-success">
+                                Edit
+                            </button>
+                        </div>
+
+                    </EditForm>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+}
+
+
+
+@code {
+
+    private List<BarberMV> ba = new List<BarberMV>();
+    protected override async Task OnInitializedAsync()
+    {
+        ba = await BarberService.GetAllBarbers();
+    }
+
+    bool PriceOrPercent = true;
+
+    // Add Barber Modal------------
+    bool ShowAddBarberModal = false;
+    BarberD barber = new BarberD();
+    public void OpenAddBarberModal()
+    {
+        ShowAddBarberModal = true;
+    }
+    public void CloseAddBarberModal()
+    {
+        ShowAddBarberModal = false;
+        barber = new BarberD();
+    }
+    public async Task AddBarber()
+    {
+        await JS.InvokeVoidAsync("showLoading");
+        await BarberService.AddBarber(barber);
+        barber = new BarberD();
+        await JS.InvokeVoidAsync("hideLoading");
+        ba = await BarberService.GetAllBarbers();
+        ShowAddBarberModal = false;
+    }
+
+    // Delete Barber Modal------------
+    bool ShowDeleteBarberModal = false;
+    string? barberIdToDelete;
+    CheckAccess checkAccessDelete = new CheckAccess();
+    public void OpenDeleteBarberModal(string barberId)
+    {
+        barberIdToDelete = barberId;
+        checkAccessDelete = new CheckAccess();
+        ShowDeleteBarberModal = true;
+    }
+    public void CloseDeleteBarberModal()
+    {
+        ShowDeleteBarberModal = false;
+        checkAccessDelete = new CheckAccess();
+    }
+    public async Task DeleteBarber()
+    {
+        await JS.InvokeVoidAsync("showLoading");
+        var respons = await BarberService.RemoveBarber(barberIdToDelete ?? "", checkAccessDelete);
+        await JS.InvokeVoidAsync("hideLoading");
+
+        if (!respons.Status)
+        {
+            await JS.InvokeVoidAsync("showToast2", respons.StatusMessage);
+            ShowDeleteBarberModal = false;
+            return;
+        }
+
+        ba = await BarberService.GetAllBarbers();
+        ShowDeleteBarberModal = false;
+        await JS.InvokeVoidAsync("showToast", respons.StatusMessage);
+    }
+
+    // Edit Barber Modal------------
+
+    bool ShowEditBarberModal = false;
+    BarberD barberToEdit = new BarberD();
+    string? barberIdToEdit;
+    CheckAccess checkAccessEdit = new CheckAccess();
+    public void OpenEditBarberModal(BarberMV barber)
+    {
+        barberIdToEdit = barber.Id;
+        barberToEdit.Name = barber.Name;
+        barberToEdit.DailyPrice = barber.DailyPrice;
+        barberToEdit.HisPercent = barber.HisPercent;
+        checkAccessEdit = new CheckAccess();
+        ShowEditBarberModal = true;
+    }
+    public void CloseEditBarberModal()
+    {
+        ShowEditBarberModal = false;
+        barberToEdit = new BarberD();
+        checkAccessEdit = new CheckAccess();
+    }
+    public async Task EditBarber()
+    {
+        await JS.InvokeVoidAsync("showLoading");
+        var respons = await BarberService.EditBarber(barberIdToEdit ?? "", barberToEdit, checkAccessEdit);
+        await JS.InvokeVoidAsync("hideLoading");
+
+        if (!respons.Status)
+        {
+            await JS.InvokeVoidAsync("showToast2", respons.StatusMessage);
+            ShowEditBarberModal = false;
+            return;
+        }
+
+        ba = await BarberService.GetAllBarbers();
+        ShowEditBarberModal = false;
+        barberToEdit = new BarberD();
+        await JS.InvokeVoidAsync("showToast", respons.StatusMessage);
+    }
+
+}

@@ -1,0 +1,244 @@
+@page "/order"
+@attribute [Authorize]
+@inject OrderService orderService
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@inject IJSRuntime JS
+
+<div class="container mt-4">
+
+    <div class="row align-items-center mb-4">
+
+        <div class="col">
+
+            <h2 class="fw-bold text-dark d-flex align-items-center gap-2">
+                <i class="bi bi-bag-check-fill text-primary"></i> Orders Management
+            </h2>
+
+            <p class="text-muted mb-0">
+                Manage your barbershop Orders.
+            </p>
+
+        </div>
+
+        <div class="col-auto">
+
+            <NavLink href="/" class="btn btn-success px-4 d-flex align-items-center gap-2">
+                <i class="bi bi-plus-lg"></i> New Order
+            </NavLink>
+
+        </div>
+
+    </div>
+
+    <!-- Search Toolbar -->
+    <div class="card p-3 mb-4 border-0 shadow-sm">
+        <div class="row align-items-center g-2">
+            <div class="col-md-4">
+                <InputDate @bind-Value="selectedDate"
+                           max="@DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd")"
+                           class="form-control" />
+            </div>
+            <div class="col-auto d-flex gap-2">
+                <button class="btn btn-primary d-flex align-items-center gap-1" @onclick="SearchByDate">
+                    <i class="bi bi-search"></i> Search
+                </button>
+                <button class="btn btn-outline-secondary d-flex align-items-center gap-1" @onclick="LoadData">
+                    <i class="bi bi-arrow-counterclockwise"></i> Show All
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="container">
+    <div class="card border-0 shadow-sm overflow-hidden mb-4">
+        <table class="table mb-0 align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Barber</th>
+                    <th scope="col">Date</th>
+                    <th scope="col">Total Price</th>
+                    <th scope="col" class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var _item in orderMVs)
+                {
+                    <tr>
+                        <td class="fw-semibold text-dark">@_item.BarberName</td>
+                        <td class="text-muted">@_item.Date</td>
+                        <td><span class="badge bg-success-subtle text-success px-3 py-2 fs-6">@_item.TotalPrice.ToString("N2") EGP</span></td>
+                        <td class="text-end">
+                            <NavLink class="btn btn-sm btn-primary me-2" href="@($"/orderDetails/{_item.id}")">
+                                <i class="bi bi-eye me-1"></i> Details
+                            </NavLink>
+                            <button class="btn btn-sm btn-danger" @onclick="() => OpenRemove(_item.id)">
+                                <i class="bi bi-trash me-1"></i> Delete
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (!hideNextButton)
+    {
+        <div class="d-flex justify-content-center mb-4">
+            <button class="btn btn-outline-secondary me-2" @onclick="PreviousPage">Previous</button>
+            <button class="btn btn-outline-secondary" @onclick="NextPage">Next</button>
+        </div>
+    }
+</div>
+
+@if (showRemove)
+{
+    <div class="modal fade show d-block"
+         style="background-color:rgba(0,0,0,.5)">
+
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5>Delete Order</h5>
+                    <button class="btn-close"
+                            @onclick="closeRemove">
+                    </button>
+                </div>
+
+                <div class="modal-body">
+
+                    <EditForm Model="@checkAccess" OnValidSubmit="RemoveOrder">
+
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div class="mb-3">
+                            <label class="form-label">
+                                Password
+                            </label>
+
+                            <input type="password" class="form-control"
+                                         @bind="checkAccess.pass" />
+
+                            <ValidationMessage For="@(() => checkAccess.pass)" />
+                        </div>
+
+                        <div class="text-end">
+                            <button type="button"
+                                    class="btn btn-secondary me-2"
+                                    @onclick="closeRemove">
+                                Cancel
+                            </button>
+
+                            <button type="submit"
+                                    class="btn btn-danger">
+                                Delete
+                            </button>
+                        </div>
+
+                    </EditForm>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+}
+
+
+@code {
+
+    DateTime selectedDate = DateTime.UtcNow;
+    List<OrderMV> orderMVs = new();
+    Pagenation pagenation = new Pagenation { PageNumber = 1, PageSize = 10 };
+    bool hideNextButton = false;
+    public async Task LoadData()
+    {
+        orderMVs = await orderService.GetAllOrder(pagenation);
+        hideNextButton = false;
+
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+
+    string OrderId =string.Empty;
+    bool showRemove = false;
+    CheckAccess checkAccess = new CheckAccess();
+    public void OpenRemove(string id)
+    {
+        OrderId = id;
+        checkAccess = new CheckAccess();
+        Console.WriteLine(OrderId);
+        showRemove = true;
+    }
+
+    public void closeRemove()
+    {
+        showRemove = false;
+        checkAccess = new CheckAccess();
+    }
+
+    public async Task RemoveOrder()
+    {
+        await JS.InvokeVoidAsync("showLoading");
+        var respons = await orderService.RemoveOrder(OrderId, checkAccess);
+        await JS.InvokeVoidAsync("hideLoading");
+        showRemove = false;
+        await LoadData();
+
+        if(!respons.Status)
+        {
+            await JS.InvokeVoidAsync("showToast2",respons.StatusMessage);
+            return;
+        }
+        await JS.InvokeVoidAsync("showToast",respons.StatusMessage);
+
+    }
+
+
+    public async Task NextPage()
+    {
+        pagenation.PageNumber++;
+        await LoadData();
+        if (orderMVs.Count == 0)
+        {
+            pagenation.PageNumber--;
+            await LoadData();
+            await JS.InvokeVoidAsync("showToast3", "لا توجد المزيد من الطلبات");
+            return;
+        }
+    }
+
+    public async Task PreviousPage()
+    {
+        if (pagenation.PageNumber == 1)
+        {
+            await JS.InvokeVoidAsync("showToast3", "أنت بالفعل في الصفحة الأولى");
+            return;
+        }
+
+        pagenation.PageNumber--;
+        await LoadData();
+    }
+
+    public async Task SearchByDate()
+    {
+        await JS.InvokeVoidAsync("showLoading");
+        orderMVs = await orderService.GetOrdersByDate(selectedDate);
+        await JS.InvokeVoidAsync("hideLoading");
+
+        if (orderMVs.Count == 0)
+        {
+            await JS.InvokeVoidAsync("showToast3", "لا توجد طلبات لهذا التاريخ");
+            return;
+        }
+        hideNextButton = true;
+    }
+
+}

@@ -1,0 +1,681 @@
+@page "/"
+@attribute [Authorize]
+@inject BarberService barberService
+@inject ItemService itemService
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@inject OrderService orderService
+@inject IJSRuntime JS
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+<div class="pos-layout">
+
+    <!-- ===== LEFT: Services ===== -->
+    <div class="pos-left">
+
+        <div class="pos-left-header">
+            <div class="pos-title-block">
+                <span class="pos-title">Services</span>
+                <span class="pos-count">@items.Count items</span>
+            </div>
+            <div class="pos-search">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <input class="pos-search-input"
+                       placeholder="Search…"
+                       @bind="searchText"
+                       @bind:event="oninput" />
+            </div>
+        </div>
+
+        <div class="services-grid">
+            @if (items.Count == 0)
+            {
+                <div class="no-items">
+                    <p>No services found</p>
+                </div>
+            }
+            @foreach (var item in items)
+            {
+                <div class="svc-card @(item.Selected ? "svc-card--on" : "")"
+                     @onclick="() => { if (!item.Selected) Add(item); }">
+                    <div class="svc-left">
+                        @if (item.Selected)
+                        {
+                            <span class="svc-check">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                            </span>
+                        }
+                        <span class="svc-name">@item.Name</span>
+                    </div>
+                    <span class="svc-price">@item.Price <small>EGP</small></span>
+                </div>
+            }
+        </div>
+
+    </div>
+
+    <!-- ===== RIGHT: Order ===== -->
+    <div class="pos-right">
+        <div class="order-panel">
+
+            <div class="order-top">
+                <span class="order-top-title">Order Summary</span>
+                @if (SelectedItem.Count > 0)
+                {
+                    <span class="order-badge">@SelectedItem.Count</span>
+                }
+            </div>
+
+            <div class="order-body">
+
+                <!-- Barber -->
+                <div class="form-row">
+                    <label class="form-lbl">Barber</label>
+                    <div class="select-wrap">
+                        <InputSelect @bind-Value="id" class="form-sel">
+                            <option value="">Select barber…</option>
+                            @foreach (var b in barberMVs)
+                            {
+                                <option value="@b.Id">@b.Name</option>
+                            }
+                        </InputSelect>
+                        <svg class="sel-arrow" xmlns="http://www.w3.org/2000/svg" width="13" height="13"
+                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9" />
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Selected items -->
+                <div class="form-row">
+                    <label class="form-lbl">Selected Services</label>
+
+                    @if (SelectedItem.Count == 0)
+                    {
+                        <div class="cart-empty">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
+                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+                            </svg>
+                            <span>No services added</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="cart-list">
+                            @foreach (var item in SelectedItem)
+                            {
+                                <div class="cart-row">
+                                    <div class="cart-info">
+                                        <span class="cart-name">@item.Name</span>
+                                        <span class="cart-price">@item.Price EGP</span>
+                                    </div>
+                                    <button class="cart-remove" @onclick="() => Remove(item)">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13"
+                                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                             stroke-linecap="round" stroke-linejoin="round">
+                                            <line x1="18" y1="6" x2="6" y2="18" />
+                                            <line x1="6" y1="6" x2="18" y2="18" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+
+                <!-- Total -->
+                <div class="total-block">
+                    <span class="total-lbl">Total</span>
+                    <span class="total-num">@TotalPrice <small>EGP</small></span>
+                </div>
+
+                <!-- Complete -->
+                <button class="complete-btn" disabled="@(!CanCompleteOrder || isOrdering)" @onclick="CreatOrder">
+                    @if (isOrdering)
+                    {
+                        <span class="btn-spin"></span>
+                        <span>Processing…</span>
+                    }
+                    else
+                    {
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                        <span>Complete Order</span>
+                    }
+                </button>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<style>
+    /* ── Root ─────────────────────────────────────── */
+    .pos-layout {
+        font-family: 'Inter', sans-serif;
+        display: flex;
+        height: calc(100vh - 2rem);
+        overflow: hidden;
+        background: #f8fafc;
+        padding: 1rem;
+        gap: 1.25rem;
+    }
+
+    /* ── LEFT PANEL ───────────────────────────────── */
+    .pos-left {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 1.25rem;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    .pos-left-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.25rem;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .pos-title-block {
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
+    }
+
+    .pos-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #2c3440;
+    }
+
+    .pos-count {
+        font-size: 0.78rem;
+        color: #9a9ea6;
+        font-weight: 400;
+    }
+
+    /* Search */
+    .pos-search {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: #f8fafc;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 0.45rem 0.85rem;
+        flex: 1;
+        max-width: 280px;
+        color: #64748b;
+    }
+
+    .pos-search-input {
+        border: none;
+        outline: none;
+        background: transparent;
+        font-size: 0.875rem;
+        font-family: 'Inter', sans-serif;
+        color: #1e293b;
+        width: 100%;
+    }
+
+    .pos-search-input::placeholder { color: #94a3b8; }
+
+    /* Services grid */
+    .services-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 0.75rem;
+        overflow-y: auto;
+        padding-right: 0.25rem;
+        align-content: start;
+        flex: 1;
+    }
+
+    .services-grid::-webkit-scrollbar { width: 4px; }
+    .services-grid::-webkit-scrollbar-track { background: transparent; }
+    .services-grid::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+    .svc-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 0.8rem 0.95rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+        user-select: none;
+        min-height: 56px;
+    }
+
+    .svc-card:hover:not(.svc-card--on) {
+        border-color: #93c5fd;
+        box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.08);
+        background: #f0f9ff;
+    }
+
+    .svc-card--on {
+        border-color: #3b82f6;
+        background: #eff6ff;
+        cursor: default;
+    }
+
+    .svc-left {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        min-width: 0;
+    }
+
+    .svc-check {
+        flex-shrink: 0;
+        width: 18px;
+        height: 18px;
+        background: #5a7a9e;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+    }
+
+    .svc-name {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #2c3440;
+        line-height: 1.25;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .svc-price {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #5a7a9e;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .svc-price small {
+        font-size: 0.65rem;
+        font-weight: 400;
+        color: #9a9ea6;
+    }
+
+    .no-items {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 3rem;
+        color: #b5b1ab;
+        font-size: 0.875rem;
+    }
+
+    /* ── RIGHT PANEL ──────────────────────────────── */
+    .pos-right {
+        width: 340px;
+        min-width: 320px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .order-panel {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+
+    .order-top {
+        background: #1e293b;
+        color: #ffffff;
+        padding: 1rem 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .order-top-title {
+        font-size: 0.95rem;
+        font-weight: 600;
+        letter-spacing: 0.1px;
+    }
+
+    .order-badge {
+        background: #3b82f6;
+        color: #fff;
+        font-size: 0.75rem;
+        font-weight: 700;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .order-body {
+        padding: 1.1rem 1.1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        flex: 1;
+        overflow-y: auto;
+    }
+
+    .order-body::-webkit-scrollbar { width: 4px; }
+    .order-body::-webkit-scrollbar-thumb { background: #d5d1cb; border-radius: 4px; }
+
+    /* Form rows */
+    .form-row {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+    }
+
+    .form-lbl {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+    }
+
+    .select-wrap {
+        position: relative;
+    }
+
+    .form-sel {
+        width: 100%;
+        padding: 0.6rem 2rem 0.6rem 0.8rem;
+        border: 1.5px solid #dbd7d1;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-family: 'Inter', sans-serif;
+        color: #2c3440;
+        background: #f5f3ef;
+        appearance: none;
+        outline: none;
+        cursor: pointer;
+        transition: border-color 0.15s;
+        box-sizing: border-box;
+    }
+
+    .form-sel:focus {
+        border-color: #5a7a9e;
+    }
+
+    .sel-arrow {
+        position: absolute;
+        right: 0.7rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9a9ea6;
+        pointer-events: none;
+    }
+
+    /* Cart */
+    .cart-empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1.5rem 0;
+        color: #c5c0b8;
+    }
+
+    .cart-empty span {
+        font-size: 0.8rem;
+    }
+
+    .cart-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.45rem;
+    }
+
+    .cart-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #f0eeea;
+        border-radius: 8px;
+        padding: 0.6rem 0.75rem;
+        border: 1px solid #e5e1db;
+    }
+
+    .cart-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.1rem;
+    }
+
+    .cart-name {
+        font-size: 0.825rem;
+        font-weight: 600;
+        color: #2c3440;
+    }
+
+    .cart-price {
+        font-size: 0.75rem;
+        color: #5a7a9e;
+        font-weight: 500;
+    }
+
+    .cart-remove {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #c5c0b8;
+        display: flex;
+        align-items: center;
+        padding: 0.2rem;
+        border-radius: 4px;
+        transition: color 0.15s, background 0.15s;
+    }
+
+    .cart-remove:hover {
+        color: #c0574e;
+        background: #faeaea;
+    }
+
+    /* Total */
+    .total-block {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.85rem 0;
+        border-top: 1.5px solid #dbd7d1;
+        border-bottom: 1.5px solid #dbd7d1;
+        margin-top: auto;
+    }
+
+    .total-lbl {
+        font-size: 0.825rem;
+        font-weight: 600;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+    }
+
+    .total-num {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #2c3440;
+    }
+
+    .total-num small {
+        font-size: 0.75rem;
+        font-weight: 400;
+        color: #9a9ea6;
+        margin-left: 2px;
+    }
+
+    /* Complete button */
+    .complete-btn {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background: #10b981;
+        color: #ffffff;
+        border: none;
+        border-radius: 9px;
+        font-size: 0.925rem;
+        font-weight: 600;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        transition: background 0.15s, transform 0.1s;
+        margin-top: 0.25rem;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .complete-btn:hover:not(:disabled) {
+        background: #059669;
+    }
+
+    .complete-btn:active:not(:disabled) {
+        transform: scale(0.99);
+    }
+
+    .complete-btn:disabled {
+        background: #cbd5e1;
+        color: #94a3b8;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+
+    .btn-spin {
+        width: 15px;
+        height: 15px;
+        border: 2px solid rgba(245,243,239,0.3);
+        border-top-color: #f5f3ef;
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+        display: inline-block;
+    }
+
+    @@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+
+@code {
+    List<BarberMV> barberMVs = new();
+    List<ItemMV> items = new();
+    List<ItemMV> originalItems = new();
+    List<ItemMV> SelectedItem = new();
+    string id = string.Empty;
+    decimal TotalPrice = 0;
+    bool isOrdering = false;
+    bool firstLoad = true;
+
+    bool CanCompleteOrder => !string.IsNullOrWhiteSpace(id) && SelectedItem.Count > 0;
+
+    private string _searchText = "";
+    public string searchText
+    {
+        get => _searchText;
+        set { _searchText = value; Search(); }
+    }
+
+    public void Search()
+    {
+        items = string.IsNullOrWhiteSpace(searchText)
+            ? originalItems.ToList()
+            : originalItems.Where(x => x.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase)).ToList();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && firstLoad)
+        {
+            firstLoad = false;
+            await LoadData();
+            StateHasChanged();
+        }
+    }
+
+    public async Task LoadData()
+    {
+        barberMVs = await barberService.GetAllBarbers();
+        items = await itemService.GetAllItems();
+        originalItems = items.ToList();
+    }
+
+    public void Add(ItemMV itemMV)
+    {
+        itemMV.Selected = true;
+        TotalPrice += itemMV.Price;
+        SelectedItem.Add(itemMV);
+    }
+
+    public void Remove(ItemMV itemMV)
+    {
+        TotalPrice -= itemMV.Price;
+        SelectedItem.Remove(itemMV);
+        var item = items.FirstOrDefault(e => e.Id == itemMV.Id);
+        if (item != null) item.Selected = false;
+    }
+
+    OrderD orderD = new();
+
+    public async Task CreatOrder()
+    {
+        try
+        {
+            isOrdering = true;
+            StateHasChanged();
+
+            orderD.TotalPrice = TotalPrice;
+            orderD.BarberId = id;
+            foreach (var item in SelectedItem)
+                orderD.orderItemDs.Add(new OrderItemD { Name = item.Name, Price = item.Price });
+
+            var respon = await orderService.AddOrder(orderD);
+
+            if (!respon.Status)
+            {
+                await JS.InvokeVoidAsync("showToast2", respon.StatusMessage);
+                return;
+            }
+
+            await LoadData();
+            orderD = new();
+            SelectedItem.Clear();
+            id = string.Empty;
+            TotalPrice = 0;
+            await JS.InvokeVoidAsync("showToast", respon.StatusMessage);
+        }
+        finally
+        {
+            isOrdering = false;
+            StateHasChanged();
+        }
+    }
+}

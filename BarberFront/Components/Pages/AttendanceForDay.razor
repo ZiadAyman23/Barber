@@ -1,0 +1,351 @@
+@page "/AttendanceForDay"
+@attribute [Authorize]
+@inject AttentanceService attendanceService
+@inject BarberService barberService
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@inject IJSRuntime JS
+
+
+<div class="container mt-4">
+
+    <div class="row align-items-center mb-4">
+
+        <div class="col">
+
+            <h2 class="fw-bold text-dark">
+                Attendance For @selectedDate
+            </h2>
+
+          
+
+        </div>
+
+        <div class="col-auto">
+
+            <InputDate @bind-Value="selectedDate"
+                       max="@DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd")"
+                       @bind-Value:after="LoadAttendance"
+                       class="form-control" />
+                       <br />
+            <button class="btn btn-primary">
+                Search
+            </button>
+        </div>
+       
+
+    </div>
+
+</div>
+
+
+
+
+@if (!AtttendanceRecorded)
+{
+    <table class="table">
+        <thead>
+
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Status</th>
+                <th scope="col">Present</th>
+
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var _item in barberList)
+            {
+                <tr>
+                    <td>@_item.Name</td>
+                    @if (_item.StartDate > selectedDate)
+                    {
+                       
+                        <td><span class="badge bg-secondary">Not Started</span></td>
+                        <td></td>
+                    }
+                    else
+                    {
+                        <td><span class="badge bg-warning">Not Recorded</span></td>
+                        
+                        <td><InputCheckbox @bind-Value="_item.IsAbsentToday" /> </td>
+                    }
+                   
+
+                </tr>
+            }
+
+        </tbody>
+
+
+    </table>
+    @if (barberList.Any(b => b.StartDate <= selectedDate))
+    {
+
+        <button class="btn btn-primary" @onclick="SaveAttendance">Record Attendance</button>
+    }
+    else if (barberList.Any(b => b.StartDate > selectedDate))
+    {
+        <div class="alert alert-info mt-3">
+            No barbers have started on or before the selected date.
+        </div>
+    }
+
+}
+else
+{
+    <table class="table">
+        <thead>
+
+            <tr>
+                <th scope="col">Name</th>
+                
+                <th scope="col">Status</th>
+                <th scope="col"></th>
+                <th scope="col">    </th>
+
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var _item in attendanceList)
+            {
+                <tr>
+                    <td>@_item.BarberName</td>
+                   
+                    @if (_item.Status == "Present")
+                    {
+                        <td><span class="badge bg-success">@_item.Status</span></td>
+                        <td><button class="btn btn-sm btn-primary" @onclick="() => openEdit(_item.AttendanceId, _item.Status)">Edit</button></td>
+                    }
+                    else if (_item.Status == "Absent")
+                    {
+                        <td><span class="badge bg-danger">@_item.Status</span></td>
+                        <td><button class="btn btn-sm btn-primary" @onclick="() => openEdit(_item.AttendanceId,_item.Status)">Edit</button></td>
+                    }
+                    else
+                    {
+                        <td><span class="badge bg-warning">Not Recorded</span></td>
+                        <td><button class="btn btn-success">Attend</button></td>
+                        <td><button class="btn btn-danger">Absent</button></td>
+                    }
+                    <td>
+                        <NavLink href="@($"/barberAttendance/{_item.BarberId}")"
+                                 class="btn btn-sm btn-success">
+                            Details
+                        </NavLink>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+
+
+
+@if (!string.IsNullOrWhiteSpace(Massage))
+{
+    <div class="alert alert-danger">
+        @Massage
+    </div>
+}
+
+
+
+
+
+@if (showEdit == true)
+{
+
+    <div class="modal fade show d-block"
+         style="background-color:rgba(0,0,0,.5)">
+
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5>Edit Item</h5>
+                    <button class="btn-close"
+                            @onclick="CloseEditBarberModal">
+                    </button>
+                </div>
+
+                <div class="modal-body">
+
+                    <EditForm Model="@attendanceD1" OnValidSubmit="EditAttend">
+
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div class="mb-3">
+                            <label class="form-label">
+                                Status
+                            </label>
+
+                            <InputCheckbox @bind-Value="attendanceD1.IsPresent" />
+
+                            <ValidationMessage For="@(() => attendanceD1.IsPresent)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <input type="password" class="form-control" @bind="checkAccess.pass" />
+                            <ValidationMessage For="@(() => checkAccess.pass)" />
+                        </div>
+
+                        <div class="text-end">
+                            <button type="button"
+                                    class="btn btn-secondary me-2"
+                                    @onclick="CloseEditBarberModal">
+                                Cancel
+                            </button>
+
+                            <button type="submit"
+                                    class="btn btn-success">
+                                Edit
+                            </button>
+                        </div>
+
+                    </EditForm>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+
+    List<AttendanceMV> attendanceList = new List<AttendanceMV>();
+
+    List<BarberMV> barberList = new List<BarberMV>();
+    
+
+    bool AtttendanceRecorded ;
+
+    DateOnly selectedDate ;
+
+    protected override async Task OnInitializedAsync()
+    {
+        selectedDate = DateOnly.FromDateTime(DateTime.Now);
+
+        await LoadAttendance();
+
+
+    }
+
+    List<AttendanceD> attendanceD = new List<AttendanceD>();
+    public async Task SaveAttendance()
+    {
+        foreach (var barber in barberList)
+        {
+
+
+            AttendanceD attendance = new AttendanceD
+            {
+                BarberId = barber.Id,
+                IsPresent = barber.IsAbsentToday,
+                DateOnly = selectedDate
+            };
+
+            attendanceD.Add(attendance);
+        }
+
+        await JS.InvokeVoidAsync("showLoading");
+
+        var respons = await attendanceService.AddAttendance(attendanceD);
+
+        await JS.InvokeVoidAsync("hideLoading");
+
+
+        await LoadAttendance();
+
+        attendanceD.Clear();
+
+        if(respons.Status)
+        {
+            await JS.InvokeVoidAsync("showToast", respons.StatusMessage);
+
+        }
+
+        else
+        {
+            await JS.InvokeVoidAsync("showToast2", respons.StatusMessage);
+        }
+
+
+
+
+    }
+
+    string Massage = string.Empty;
+
+    private async Task LoadAttendance()
+    {
+
+        var respons = await attendanceService.GetAttendanceByDate(selectedDate);
+
+        attendanceList = respons.attendances;
+
+        if (attendanceList.Any())
+        {
+            AtttendanceRecorded = true;
+        }
+        else
+        {
+            barberList = await barberService.GetAllBarbers();
+            AtttendanceRecorded = false;
+        }
+
+        if(!respons.apiRespons.Status)
+        {
+            await JS.InvokeVoidAsync("showToast2",respons.apiRespons.StatusMessage);
+        }
+    }
+
+    //Edit
+    string AttendiId = string.Empty;
+    bool showEdit = false;
+    CheckAccess checkAccess = new CheckAccess();
+
+    AttendanceD attendanceD1 = new AttendanceD();
+    public void openEdit(string id, string status)
+    {
+
+        AttendiId = id;
+        attendanceD1.IsPresent = status == "Present";
+        checkAccess = new CheckAccess();
+        showEdit = true;
+
+
+    }
+
+
+    public void CloseEditBarberModal()
+    {
+        showEdit = false;
+        checkAccess = new CheckAccess();
+
+    }
+
+    public async Task EditAttend()
+    {
+        await JS.InvokeVoidAsync("showLoading");
+        var respons = await attendanceService.UpdateAttend(attendanceD1, AttendiId, checkAccess);
+        await JS.InvokeVoidAsync("hideLoading");
+        showEdit = false;
+
+        await LoadAttendance();
+
+        if (respons.Status)
+        {
+            await JS.InvokeVoidAsync("showToast", respons.StatusMessage);
+        }
+        else
+        {
+            await JS.InvokeVoidAsync("showToast2", respons.StatusMessage);
+        }
+    }
+    
+
+}

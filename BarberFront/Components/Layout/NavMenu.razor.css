@@ -1,0 +1,128 @@
+.navbar-toggler {
+    appearance: none;
+    cursor: pointer;
+    width: 3.5rem;
+    height: 2.5rem;
+    color: white;
+    position: absolute;
+    top: 0.5rem;
+    right: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.55%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") no-repeat center/1.75rem rgba(255, 255, 255, 0.1);
+}
+
+.navbar-toggler:checked {
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Brand */
+.nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 1.1rem 1.25rem;
+    color: #e8e5e0;
+    font-family: 'Inter', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+/* Section labels */
+.nav-section-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: rgba(255,255,255,0.3);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    padding: 1rem 1.25rem 0.4rem;
+}
+
+/* Nav items */
+.nav-item {
+    padding: 0.1rem 0.7rem;
+}
+
+    .nav-item:first-of-type {
+        padding-top: 0;
+    }
+
+    .nav-item ::deep .nav-link {
+        font-family: 'Inter', sans-serif;
+        color: rgba(255,255,255,0.55);
+        background: none;
+        border: none;
+        border-radius: 7px;
+        height: 2.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        padding: 0 0.65rem;
+        font-size: 0.82rem;
+        font-weight: 500;
+        width: 100%;
+        cursor: pointer;
+        transition: color 0.15s, background 0.15s;
+        text-decoration: none;
+    }
+
+.nav-item ::deep a.active {
+    background-color: rgba(255,255,255,0.1);
+    color: #fff;
+}
+
+.nav-item ::deep .nav-link:hover {
+    background-color: rgba(255,255,255,0.07);
+    color: rgba(255,255,255,0.85);
+}
+
+/* Logout */
+.nav-logout ::deep .nav-link {
+    color: rgba(200,120,100,0.7);
+}
+
+.nav-logout ::deep .nav-link:hover {
+    color: #e8a090;
+    background-color: rgba(200,120,100,0.1);
+}
+
+/* Spacer */
+.nav-spacer {
+    flex: 1;
+    min-height: 1rem;
+}
+
+/* Scrollable */
+.nav-scrollable {
+    display: none;
+}
+
+.navbar-toggler:checked ~ .nav-scrollable {
+    display: block;
+}
+
+@media (min-width: 641px) {
+    .navbar-toggler {
+        display: none;
+    }
+
+    .nav-scrollable {
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 3.3rem);
+        overflow-y: auto;
+    }
+
+    .nav-scrollable > nav {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+    }
+}
+
+/* Scrollbar */
+.nav-scrollable::-webkit-scrollbar { width: 3px; }
+.nav-scrollable::-webkit-scrollbar-track { background: transparent; }
+.nav-scrollable::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }

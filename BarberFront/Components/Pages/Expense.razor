@@ -1,0 +1,393 @@
+@page "/expense"
+@attribute [Authorize]
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@inject ExpenseService expenseService
+@inject IJSRuntime JS
+
+<div class="container mt-4">
+
+    <div class="row align-items-center mb-4">
+
+        <div class="col">
+
+            <h2 class="fw-bold text-dark d-flex align-items-center gap-2">
+                <i class="bi bi-wallet2 text-primary"></i> Expense Management
+            </h2>
+
+            <p class="text-muted mb-0">
+                Manage your barbershop expenses.
+            </p>
+
+        </div>
+
+        <div class="col-auto">
+
+            <button class="btn btn-success px-4 d-flex align-items-center gap-2"
+                    @onclick="OpenAddExpenseModal">
+                <i class="bi bi-plus-lg"></i> Add Expense
+            </button>
+
+        </div>
+
+    </div>
+
+    <!-- Search Toolbar -->
+    <div class="card p-3 mb-4 border-0 shadow-sm">
+        <div class="row align-items-center g-2">
+            <div class="col-md-4">
+                <InputDate @bind-Value="selectedDate"
+                           max="@DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd")"
+                           class="form-control" />
+            </div>
+            <div class="col-auto d-flex gap-2">
+                <button class="btn btn-primary d-flex align-items-center gap-1" @onclick="GetByDate">
+                    <i class="bi bi-search"></i> Search
+                </button>
+                <button class="btn btn-outline-secondary d-flex align-items-center gap-1" @onclick="getAllExpens">
+                    <i class="bi bi-arrow-counterclockwise"></i> Show All
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="container mb-4">
+    <div class="card border-0 shadow-sm overflow-hidden">
+        <table class="table mb-0 align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Amount</th>
+                    <th scope="col">Reason</th>
+                    <th scope="col">Created By</th>
+                    <th scope="col">Date</th>
+                    <th scope="col" class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var _item in expenseMVs)
+                {
+                    <tr>
+                        <td><span class="badge bg-light text-dark border px-3 py-2 fs-6">@_item.Amount.ToString("N2") EGP</span></td>
+                        <td class="fw-medium text-dark">@_item.Reason</td>
+                        <td><span class="badge bg-secondary-subtle text-secondary px-2 py-1">@_item.CreatedBy</span></td>
+                        <td class="text-muted">@_item.Date</td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-primary me-2" @onclick="() => OpenEditExpenseModal(_item, _item.Id)">
+                                <i class="bi bi-pencil me-1"></i> Edit
+                            </button>
+                            <button class="btn btn-sm btn-danger" @onclick="() => OpenDeleteExpenseModal(_item.Id)">
+                                <i class="bi bi-trash me-1"></i> Delete
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (!hideNextButton)
+    {
+        <div class="d-flex justify-content-center my-4">
+            <button class="btn btn-outline-secondary me-2" @onclick="previousPag">Previous</button>
+            <button class="btn btn-outline-secondary" @onclick="nextPag">Next</button>
+        </div>
+    }
+</div>
+
+
+@if (ShowAddForm)
+{
+    <div class="modal fade show d-block" style="background-color:rgba(0,0,0,.5)">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Expense</h5>
+                    <button class="btn-close" @onclick="CloseAddExpenseModal"></button>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="@expenseAdd" OnValidSubmit="AddExpense">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div class="mb-3">
+                            <label class="form-label">Amount</label>
+                            <InputNumber class="form-control" @bind-Value="expenseAdd.Amount" />
+                            <ValidationMessage For="@(() => expenseAdd.Amount)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Reason</label>
+                            <InputText class="form-control" @bind-Value="expenseAdd.Reason" />
+                            <ValidationMessage For="@(() => expenseAdd.Reason)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Created By</label>
+                            <InputText class="form-control" @bind-Value="expenseAdd.CreatedBy" />
+                            <ValidationMessage For="@(() => expenseAdd.CreatedBy)" />
+                        </div>
+
+                        <div class="text-end">
+                            <button type="button" class="btn btn-secondary me-2" @onclick="CloseAddExpenseModal">Cancel</button>
+                            <button type="submit" class="btn btn-success">Add</button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+@if (ShowDeleteForm)
+{
+    <div class="modal fade show d-block" style="background-color:rgba(0,0,0,.5)">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Delete Expense</h5>
+                    <button class="btn-close" @onclick="CloseDeleteExpenseModal"></button>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="@checkAccess" OnValidSubmit="DeleteExpense">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <input type="password" class="form-control" @bind="checkAccess.pass" />
+                            <ValidationMessage For="@(() => checkAccess.pass)" />
+                        </div>
+
+                        <div class="text-end">
+                            <button type="button" class="btn btn-secondary me-2" @onclick="CloseDeleteExpenseModal">Cancel</button>
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+@if (ShowEditForm)
+{
+    <div class="modal fade show d-block" style="background-color:rgba(0,0,0,.5)">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Expense</h5>
+                    <button class="btn-close" @onclick="CloseEditExpenseModal"></button>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="@expenseEdit" OnValidSubmit="EditExpense">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div class="mb-3">
+                            <label class="form-label">Amount</label>
+                            <InputNumber class="form-control" @bind-Value="expenseEdit.Amount" />
+                            <ValidationMessage For="@(() => expenseEdit.Amount)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Reason</label>
+                            <InputText class="form-control" @bind-Value="expenseEdit.Reason" />
+                            <ValidationMessage For="@(() => expenseEdit.Reason)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Created By</label>
+                            <InputText class="form-control" @bind-Value="expenseEdit.CreatedBy" />
+                            <ValidationMessage For="@(() => expenseEdit.CreatedBy)" />
+                        </div>
+
+                        <div class="text-end">
+                            <button type="button" class="btn btn-secondary me-2" @onclick="CloseEditExpenseModal">Cancel</button>
+                            <button type="submit" class="btn btn-success">Save Changes</button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+@code {
+
+    List<ExpenseMV> expenseMVs = new List<ExpenseMV>();
+    Pagenation pagenation = new Pagenation{PageNumber=1,PageSize=10};
+    CheckAccess checkAccess = new CheckAccess();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    public async Task LoadData()
+    {
+        var list = await expenseService.GetAllExpenses(pagenation);
+        expenseMVs = list.ToList();
+    }
+
+    bool ShowAddForm { get; set; } = false;
+    ExpenseD expenseAdd = new ExpenseD();
+    public void OpenAddExpenseModal()
+    {
+        ShowAddForm = true;
+    }
+
+    public void CloseAddExpenseModal()
+    {
+        ShowAddForm = false;
+        expenseAdd = new ExpenseD();
+    }
+
+    public async Task AddExpense()
+    {
+        pagenation.PageNumber = 1;
+        await JS.InvokeVoidAsync("showLoading");
+        var respons = await expenseService.AddExpense(expenseAdd);
+        await JS.InvokeVoidAsync("hideLoading");
+
+        if (!respons.Status)
+        {
+            await JS.InvokeVoidAsync("showToast2", respons.StatusMessage);
+            return;
+        }
+
+        await JS.InvokeVoidAsync("showToast", respons.StatusMessage);
+        CloseAddExpenseModal();
+        await LoadData();
+        expenseAdd = new ExpenseD();
+    }
+
+    bool ShowDeleteForm { get; set; } = false;
+    string DeleteExpenseReason { get; set; } = string.Empty;
+
+    public void OpenDeleteExpenseModal(string id)
+    {   
+        DeleteExpenseReason = id;
+        checkAccess = new CheckAccess();
+        ShowDeleteForm = true;
+    }
+
+    public void CloseDeleteExpenseModal()
+    {
+        ShowDeleteForm = false;
+        checkAccess = new CheckAccess();
+    }
+
+    public async Task DeleteExpense()
+    {
+        await JS.InvokeVoidAsync("showLoading");
+        var respons = await expenseService.RemoveExpense(DeleteExpenseReason, checkAccess);
+        await JS.InvokeVoidAsync("hideLoading");
+
+        CloseDeleteExpenseModal();
+        await LoadData();
+
+        if (!respons.Status)
+        {
+            await JS.InvokeVoidAsync("showToast2", respons.StatusMessage);
+            return;
+        }
+
+        await JS.InvokeVoidAsync("showToast", respons.StatusMessage);
+    }
+
+    bool ShowEditForm { get; set; } = false;
+    ExpenseD expenseEdit = new ExpenseD();
+    string EditExpenseReason { get; set; } = string.Empty;
+
+    public void OpenEditExpenseModal(ExpenseMV expenseD, string id)
+    {
+        EditExpenseReason = id;
+        expenseEdit = new ExpenseD
+        {
+            Amount = expenseD.Amount,
+            Reason = expenseD.Reason,
+            CreatedBy = expenseD.CreatedBy,
+        };
+
+        ShowEditForm = true;
+    }
+
+    public void CloseEditExpenseModal()
+    {
+        ShowEditForm = false;
+        expenseEdit = new ExpenseD();
+    }
+
+    public async Task EditExpense()
+    {
+        pagenation.PageNumber = 1;
+        await JS.InvokeVoidAsync("showLoading");
+
+        var respons = await expenseService.UpdateExpense(EditExpenseReason, expenseEdit);
+        await JS.InvokeVoidAsync("hideLoading");
+
+        CloseEditExpenseModal();
+        await LoadData();
+
+        if(!respons.Status)
+        {
+            await JS.InvokeVoidAsync("showToast2", respons.StatusMessage);
+            return;
+        }
+
+        await JS.InvokeVoidAsync("showToast", respons.StatusMessage);
+    }
+
+    public async Task previousPag()
+    {
+        if (pagenation.PageNumber > 1)
+        {
+            pagenation.PageNumber -= 1;
+            await LoadData();
+        }
+        else
+        {
+            await JS.InvokeVoidAsync("showToast3", "أنت بالفعل في الصفحة الأولى");
+        }
+    }
+
+    public async Task nextPag()
+    {
+        if(expenseMVs.Count < 10)
+        {
+            await JS.InvokeVoidAsync("showToast3", "لا توجد المزيد من المصروفات");
+            return;
+        }
+
+        pagenation.PageNumber += 1;
+        await LoadData();
+
+        if(expenseMVs.Count == 0)
+        {
+            pagenation.PageNumber -= 1;
+            await LoadData();
+            await JS.InvokeVoidAsync("showToast3", "لا توجد المزيد من المصروفات");
+        }
+    }
+
+    DateOnly selectedDate = DateOnly.FromDateTime(DateTime.Today);
+    bool hideNextButton = false;
+
+    public async Task GetByDate()
+    {
+        var respons = await expenseService.GetAllExpensesByDate(selectedDate);
+        expenseMVs = respons.ToList();
+        hideNextButton = true;
+    }
+
+    public async Task getAllExpens()
+    {
+        pagenation.PageNumber = 1;
+        await LoadData();
+        hideNextButton = false;
+    }
+}

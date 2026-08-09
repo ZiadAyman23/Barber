@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="../BarberFront/BarberFront.csproj" Id="5bb6f69c-0c8e-439d-884c-68cc3cddd953" />
+  <Project Path="../Core/Core.csproj" />
+  <Project Path="../Infrastructer/Infrastructer.csproj" />
+  <Project Path="Barbershop.csproj" />
+</Solution>

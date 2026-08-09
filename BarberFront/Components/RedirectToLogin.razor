@@ -1,0 +1,26 @@
+@inject NavigationManager NavigationManager
+
+@code {
+    protected override void OnInitialized()
+    {
+        _ = Task.Run(async () =>
+        {
+            for (int i = 0; i < 15; i++)
+            {
+                try
+                {
+                    NavigationManager.NavigateTo("/login");
+                    return;
+                }
+                catch (InvalidOperationException)
+                {
+                    await Task.Delay(200);
+                }
+                catch
+                {
+                    return;
+                }
+            }
+        });
+    }
+}
