@@ -10,5 +10,7 @@ namespace Core.IRepository
         public Task RemoveExpense(string id);
         public Task UpdateExpense(Expense expense);
         public Task<List<Expense>> GetByDate(DateOnly date);
+        public Task<decimal> GetMonthelyReport(DateTime start, DateTime end);
+
     }
 }

@@ -45,6 +45,14 @@ namespace Infrastructer.Repository
             return expense;
         }
 
+        public async Task<decimal> GetMonthelyReport(DateTime start, DateTime end)
+        {
+            DateOnly _start = DateOnly.FromDateTime(start);
+            DateOnly _end = DateOnly.FromDateTime(end);
+            var espens = await dataContext.Expenses.Where(e => e.Date >= _start && e.Date < _end).Select(e => e.Amount).SumAsync();
+            return espens;
+        }
+
         public async Task RemoveExpense(string id)
         {
             var expense = await dataContext.Expenses.FirstOrDefaultAsync(x => x.Id == id);

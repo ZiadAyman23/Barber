@@ -12,7 +12,7 @@
     <div class="card shadow-sm border-0 mb-4 summary-card overflow-hidden">
         <div class="card-header bg-dark text-white d-flex align-items-center justify-content-between py-3">
             <h5 class="mb-0 fw-semibold">
-                <i class="bi bi-cash-coin me-2 text-primary"></i> Salary Details
+                <i class="bi bi-cash-coin me-2 text-primary"></i> تفاصيل الراتب
             </h5>
             <span class="badge bg-primary fs-6 px-3 py-2">
                 @salaryDetails.BarberName
@@ -24,14 +24,14 @@
 
                 <div class="col-6 col-md-3">
                     <div class="stat-box">
-                        <div class="stat-label"><i class="bi bi-person-badge me-1"></i> Barber</div>
+                        <div class="stat-label"><i class="bi bi-person-badge me-1"></i> الحلاق</div>
                         <div class="stat-value">@salaryDetails.BarberName</div>
                     </div>
                 </div>
 
                 <div class="col-6 col-md-3">
                     <div class="stat-box">
-                        <div class="stat-label"><i class="bi bi-calendar-range me-1"></i> Period</div>
+                        <div class="stat-label"><i class="bi bi-calendar-range me-1"></i> الفترة</div>
                         <div class="stat-value small">
                             @salaryDetails.StartDate.ToString("dd/MM/yyyy")
                             <i class="bi bi-arrow-right mx-1"></i>
@@ -42,21 +42,21 @@
 
                 <div class="col-6 col-md-3">
                     <div class="stat-box">
-                        <div class="stat-label"><i class="bi bi-wallet2 me-1"></i> Basic Salary</div>
+                        <div class="stat-label"><i class="bi bi-wallet2 me-1"></i> الراتب الأساسي</div>
                         <div class="stat-value text-success">@salaryDetails.Salary.ToString("N2") <small>EGP</small></div>
                     </div>
                 </div>
 
                 <div class="col-6 col-md-3">
                     <div class="stat-box">
-                        <div class="stat-label"><i class="bi bi-dash-circle me-1"></i> Total Deductions</div>
+                        <div class="stat-label"><i class="bi bi-dash-circle me-1"></i> إجمالي الخصومات</div>
                         <div class="stat-value text-danger">@salaryDetails.Deduction.ToString("N2") <small>EGP</small></div>
                     </div>
                 </div>
 
                 <div class="col-12">
                     <div class="net-salary-box">
-                        <span class="net-label"><i class="bi bi-check-circle-fill me-2"></i>Net Salary</span>
+                        <span class="net-label"><i class="bi bi-check-circle-fill me-2"></i>صافي الراتب</span>
                         <span class="net-value">@salaryDetails.FinalSalary.ToString("N2") EGP</span>
                     </div>
                 </div>
@@ -69,7 +69,7 @@
     <div class="card shadow-sm border-0 mb-4">
         <div class="card-header bg-light d-flex align-items-center">
             <i class="bi bi-list-ul me-2 text-danger"></i>
-            <h6 class="mb-0">Deductions</h6>
+            <h6 class="mb-0">الخصومات</h6>
             <span class="badge bg-danger-subtle text-danger ms-2">@deductions.Count</span>
         </div>
         <div class="card-body p-0">
@@ -77,7 +77,7 @@
             {
                 <div class="empty-state">
                     <i class="bi bi-inboxes"></i>
-                    <p>No deductions recorded for this period</p>
+                    <p>لا توجد خصومات مسجلة لهذه الفترة</p>
                 </div>
             }
             else
@@ -86,10 +86,10 @@
                     <table class="table table-hover align-middle mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th scope="col">Amount</th>
-                                <th scope="col">Reason</th>
-                                <th scope="col">Created By</th>
-                                <th scope="col">Date</th>
+                                <th scope="col">المبلغ</th>
+                                <th scope="col">السبب</th>
+                                <th scope="col">أُنشئ بواسطة</th>
+                                <th scope="col">التاريخ</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -119,7 +119,7 @@
         <div class="card shadow-sm border-0 mb-4">
             <div class="card-header bg-light d-flex align-items-center">
                 <i class="bi bi-receipt me-2 text-success"></i>
-                <h6 class="mb-0">Orders</h6>
+                <h6 class="mb-0">الطلبات</h6>
                 <span class="badge bg-success-subtle text-success ms-2">@orders.Count</span>
             </div>
             <div class="card-body p-0">
@@ -127,7 +127,7 @@
                 {
                     <div class="empty-state">
                         <i class="bi bi-receipt-cutoff"></i>
-                        <p>No orders recorded for this period</p>
+                        <p>لا توجد طلبات مسجلة لهذه الفترة</p>
                     </div>
                 }
                 else
@@ -164,7 +164,7 @@
                 <div class="card shadow-sm border-0 h-100">
                     <div class="card-header bg-light d-flex align-items-center">
                         <i class="bi bi-calendar-check me-2 text-success"></i>
-                        <h6 class="mb-0">Present</h6>
+                        <h6 class="mb-0">الحضور</h6>
                         <span class="badge bg-success-subtle text-success ms-2">@PresentAttendances.Count</span>
                     </div>
                     <div class="card-body p-0">
@@ -172,7 +172,7 @@
                         {
                             <div class="empty-state">
                                 <i class="bi bi-calendar-x"></i>
-                                <p>No present days recorded</p>
+                                <p>لا توجد أيام حضور مسجلة</p>
                             </div>
                         }
                         else
@@ -204,7 +204,7 @@
                 <div class="card shadow-sm border-0 h-100">
                     <div class="card-header bg-light d-flex align-items-center">
                         <i class="bi bi-calendar-x me-2 text-danger"></i>
-                        <h6 class="mb-0">Absent</h6>
+                        <h6 class="mb-0">الغياب</h6>
                         <span class="badge bg-danger-subtle text-danger ms-2">@AbsentAttendances.Count</span>
                     </div>
                     <div class="card-body p-0">
@@ -212,7 +212,7 @@
                         {
                             <div class="empty-state">
                                 <i class="bi bi-calendar-check"></i>
-                                <p>No absent days recorded</p>
+                                <p>لا توجد أيام غياب مسجلة</p>
                             </div>
                         }
                         else

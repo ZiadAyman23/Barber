@@ -11,11 +11,11 @@
         <div class="col">
 
             <h2 class="fw-bold text-dark d-flex align-items-center gap-2">
-                <i class="bi bi-bag-check-fill text-primary"></i> Orders Management
+                <i class="bi bi-bag-check-fill text-primary"></i> إدارة الطلبات
             </h2>
 
             <p class="text-muted mb-0">
-                Manage your barbershop Orders.
+                راجع وأدر طلبات الصالون.
             </p>
 
         </div>
@@ -23,7 +23,7 @@
         <div class="col-auto">
 
             <NavLink href="/" class="btn btn-success px-4 d-flex align-items-center gap-2">
-                <i class="bi bi-plus-lg"></i> New Order
+                <i class="bi bi-plus-lg"></i> طلب جديد
             </NavLink>
 
         </div>
@@ -40,10 +40,10 @@
             </div>
             <div class="col-auto d-flex gap-2">
                 <button class="btn btn-primary d-flex align-items-center gap-1" @onclick="SearchByDate">
-                    <i class="bi bi-search"></i> Search
+                    <i class="bi bi-search"></i> بحث
                 </button>
                 <button class="btn btn-outline-secondary d-flex align-items-center gap-1" @onclick="LoadData">
-                    <i class="bi bi-arrow-counterclockwise"></i> Show All
+                    <i class="bi bi-arrow-counterclockwise"></i> عرض الكل
                 </button>
             </div>
         </div>
@@ -56,10 +56,10 @@
         <table class="table mb-0 align-middle">
             <thead>
                 <tr>
-                    <th scope="col">Barber</th>
-                    <th scope="col">Date</th>
-                    <th scope="col">Total Price</th>
-                    <th scope="col" class="text-end">Actions</th>
+                    <th scope="col">الحلاق</th>
+                    <th scope="col">التاريخ</th>
+                    <th scope="col">الإجمالي</th>
+                    <th scope="col" class="text-end">الإجراءات</th>
                 </tr>
             </thead>
             <tbody>
@@ -71,10 +71,10 @@
                         <td><span class="badge bg-success-subtle text-success px-3 py-2 fs-6">@_item.TotalPrice.ToString("N2") EGP</span></td>
                         <td class="text-end">
                             <NavLink class="btn btn-sm btn-primary me-2" href="@($"/orderDetails/{_item.id}")">
-                                <i class="bi bi-eye me-1"></i> Details
+                                <i class="bi bi-eye me-1"></i> التفاصيل
                             </NavLink>
                             <button class="btn btn-sm btn-danger" @onclick="() => OpenRemove(_item.id)">
-                                <i class="bi bi-trash me-1"></i> Delete
+                                <i class="bi bi-trash me-1"></i> حذف
                             </button>
                         </td>
                     </tr>
@@ -101,7 +101,7 @@
             <div class="modal-content">
 
                 <div class="modal-header">
-                    <h5>Delete Order</h5>
+                    <h5>حذف طلب</h5>
                     <button class="btn-close"
                             @onclick="closeRemove">
                     </button>

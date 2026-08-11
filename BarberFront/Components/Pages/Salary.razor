@@ -11,11 +11,11 @@
         <div class="col">
 
             <h2 class="fw-bold text-dark d-flex align-items-center gap-2">
-                <i class="bi bi-cash-stack text-primary"></i> Salary Management
+                <i class="bi bi-cash-stack text-primary"></i> إدارة الرواتب
             </h2>
 
             <p class="text-muted mb-0">
-                View current barber earnings and calculate monthly salaries.
+                راجع مستحقات الحلاقين واحسب الرواتب الشهرية.
             </p>
 
         </div>
@@ -26,13 +26,13 @@
         <table class="table mb-0 align-middle">
             <thead>
                 <tr>
-                    <th scope="col">Barber</th>
-                    <th scope="col">Basic Salary</th>
-                    <th scope="col">Deductions</th>
-                    <th scope="col">Final Salary</th>
-                    <th scope="col">Orders</th>
-                    <th scope="col">Attendance</th>
-                    <th scope="col" class="text-end">Action</th>
+                    <th scope="col">الحلاق</th>
+                    <th scope="col">الراتب الأساسي</th>
+                    <th scope="col">الخصومات</th>
+                    <th scope="col">صافي الراتب</th>
+                    <th scope="col">الطلبات</th>
+                    <th scope="col">الحضور</th>
+                    <th scope="col" class="text-end">الإجراء</th>
                 </tr>
             </thead>
             <tbody>
@@ -43,7 +43,7 @@
                         <td>
                             @if (_item.SalaryAmount == 0)
                             {
-                                <span class="text-muted fs-7">No Salary</span>
+                                <span class="text-muted fs-7">لا يوجد راتب</span>
                             }
                             else
                             {
@@ -53,7 +53,7 @@
                         <td>
                             @if (_item.DeductionAmount == 0)
                             {
-                                <span class="text-muted fs-7">No Deduction</span>
+                                <span class="text-muted fs-7">لا توجد خصومات</span>
                             }
                             else
                             {
@@ -63,7 +63,7 @@
                         <td>
                             @if (_item.TotalSalary == 0)
                             {
-                                <span class="text-muted fs-7">No Salary</span>
+                                <span class="text-muted fs-7">لا يوجد راتب</span>
                             }
                             else
                             {
@@ -115,7 +115,7 @@
             <div class="modal-content">
 
                 <div class="modal-header">
-                    <h5>Pay Salary</h5>
+                    <h5>صرف الراتب</h5>
                     <button class="btn-close"
                             @onclick="ClosePaySalary">
                     </button>
@@ -125,11 +125,11 @@
 
                     <div class="alert alert-light border mb-3">
                         <div class="d-flex justify-content-between align-items-center mb-1">
-                            <span class="text-muted fs-7">Barber</span>
+                            <span class="text-muted fs-7">الحلاق</span>
                             <span class="fw-semibold text-dark">@currentSalary1.BarberName</span>
                         </div>
                         <div class="d-flex justify-content-between align-items-center">
-                            <span class="text-muted fs-7">Final Salary to Pay</span>
+                            <span class="text-muted fs-7">صافي الراتب المستحق</span>
                             <span class="fw-bold text-success fs-5">@currentSalary1.TotalSalary.ToString("N2") EGP</span>
                         </div>
                     </div>
@@ -139,7 +139,7 @@
                         <ValidationSummary />
 
                         <div class="mb-3">
-                            <label class="form-label">Admin Password</label>
+                            <label class="form-label">كلمة مرور المسؤول</label>
                             <input type="password" class="form-control" @bind="checkAccess.pass" placeholder="Enter password to confirm payout" />
                             <ValidationMessage For="@(() => checkAccess.pass)" />
                         </div>

@@ -10,3 +10,16 @@ D:\cSharb\Barbershop\Core\obj\Debug\net10.0\Core.dll
 D:\cSharb\Barbershop\Core\obj\Debug\net10.0\refint\Core.dll
 D:\cSharb\Barbershop\Core\obj\Debug\net10.0\Core.pdb
 D:\cSharb\Barbershop\Core\obj\Debug\net10.0\ref\Core.dll
+D:\cSharb\Barbershop\Core\obj\Debug\net10.0\Core.sourcelink.json
+C:\Users\Ziad\AppData\Local\Temp\barberfront-build-verify\Core.deps.json
+C:\Users\Ziad\AppData\Local\Temp\barberfront-build-verify\Core.dll
+C:\Users\Ziad\AppData\Local\Temp\barberfront-build-verify\Core.pdb
+C:\Users\Ziad\AppData\Local\Temp\barbershop-api-verify\Core.deps.json
+C:\Users\Ziad\AppData\Local\Temp\barbershop-api-verify\Core.dll
+C:\Users\Ziad\AppData\Local\Temp\barbershop-api-verify\Core.pdb
+C:\Users\Ziad\AppData\Local\Temp\barberfront-verify-final\Core.deps.json
+C:\Users\Ziad\AppData\Local\Temp\barberfront-verify-final\Core.dll
+C:\Users\Ziad\AppData\Local\Temp\barberfront-verify-final\Core.pdb
+C:\Temp\barberfront-verify\Core.deps.json
+C:\Temp\barberfront-verify\Core.dll
+C:\Temp\barberfront-verify\Core.pdb

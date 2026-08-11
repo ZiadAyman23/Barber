@@ -5,18 +5,17 @@
 @inject IJSRuntime JS
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 
-<div class="container mt-4">
+<div class="container mt-4 deduction-page">
 
     <div class="row align-items-center mb-4">
 
         <div class="col">
 
-            <h2 class="fw-bold text-dark d-flex align-items-center gap-2">
-                <i class="bi bi-dash-circle-fill text-primary"></i> Deduction Management
-            </h2>
+            <p class="page-kicker">رواتب الفريق</p>
+            <h2 class="fw-bold text-dark">الخصومات</h2>
 
             <p class="text-muted mb-0">
-                Manage your barbershop deduction.
+                راجع وأدر خصومات رواتب فريقك.
             </p>
 
         </div>
@@ -24,7 +23,7 @@
         <div class="col-auto">
 
             <button class="btn btn-success px-4" @onclick="OpenAdd">
-                + Add Deduction
+                إضافة خصم
             </button>
 
 
@@ -32,66 +31,65 @@
 
      
     </div>
-    <div class="col-auto">
+    <div class="deduction-filter">
+        <div>
+        <label class="form-label">التصفية حسب التاريخ</label>
         <InputDate @bind-Value="selectedDate"
                    max="@DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd")"
                    class="form-control" />
-        <br />
-        <button class="btn btn-sm btn-outline-primary" @onclick="GitByDate">
-            Search
-        </button>
-
-        |
-        <button class="btn btn-sm btn-outline-success" @onclick="LoadDeduction">
-            All Deduction
+        </div>
+        <button class="btn btn-primary" @onclick="GitByDate">بحث</button>
+        <button class="btn btn-outline-secondary" @onclick="LoadDeduction">
+            عرض الكل
         </button>
     </div>
 
 </div>
 
-<div>
+<div class="container deduction-content">
 
-    <table class="table">
+    <div class="card border-0 shadow-sm overflow-hidden">
+    <table class="table mb-0">
         <thead>
 
             <tr>
-                <th scope="col">Barber</th>
-                <th scope="col">Amount</th>
-                <th scope="col">Reason</th>
-                <th scope="col">Created By</th>
-                <th scope="col">Date</th>
-                <th scope="col"></th>
-                <th scope="col"></th>
+                <th scope="col">الحلاق</th>
+                <th scope="col">المبلغ</th>
+                <th scope="col">السبب</th>
+                <th scope="col">أُنشئ بواسطة</th>
+                <th scope="col">التاريخ</th>
+                <th scope="col" class="text-end">الإجراءات</th>
             </tr>
         </thead>
         <tbody>
             @foreach (var _item in deductionMVs)
             {
                 <tr>
-                    <td>@_item.BaeberName</td>
-                    <td>@_item.Amount EGP</td>
+                    <td class="fw-semibold text-dark">@_item.BaeberName</td>
+                    <td><span class="badge bg-light text-dark border px-3 py-2">@_item.Amount.ToString("N2") EGP</span></td>
                     <td>@_item.Reason</td>
                     <td>@_item.CreatedBy</td>
                     <td>@_item.DateOnly</td>
                   
-                    <td>
-                        <button class="btn btn-sm btn-primary"
+                    <td class="text-end text-nowrap">
+                        <button class="btn btn-sm btn-primary me-2"
                                 @onclick="@(() => openEdit(_item))">
-                            Edit
+                            تعديل
                         </button>
+                        <button class="btn btn-sm btn-danger" @onclick="() => openRemove(_item.id)">حذف</button>
                     </td>
-                    <td><button class="btn btn-sm btn-danger" @onclick="() => openRemove(_item.id)">Delete</button></td>
                 </tr>
             }
         </tbody>
     </table>
+    </div>
 
     @if (!hideNextButton)
     {
     
         <div class="d-flex justify-content-center mt-3">
-            <button class="btn btn-outline-dark me-2" @onclick="PreviousPage">Previous</button>
-            <button class="btn btn-outline-dark me-2"  @onclick="NextPage">Next</button>
+            <button class="btn btn-outline-secondary" @onclick="PreviousPage">السابق</button>
+            <button class="btn btn-outline-secondary"  @onclick="NextPage">التالي</button>
         </div>
     }
 </div>
@@ -106,7 +104,7 @@
             <div class="modal-content">
 
                 <div class="modal-header">
-                    <h5>Add Item</h5>
+                    <h5>إضافة خصم</h5>
                     <button class="btn-close"
                             @onclick="closeAdd">
                     </button>
@@ -121,7 +119,7 @@
 
                         <div class="mb-3">
                             <label class="form-label">
-                                Amount
+                                الحلاق
                             </label>
 
                             <InputSelect class="form-control"
@@ -139,7 +137,7 @@
 
                         <div class="mb-3">
                             <label class="form-label">
-                                Amount
+                                المبلغ
                             </label>
 
                             <InputNumber class="form-control"
@@ -150,7 +148,7 @@
 
                         <div class="mb-3">
                             <label class="form-label">
-                                Reason
+                                السبب
                             </label>
 
                             <InputText class="form-control"
@@ -161,7 +159,7 @@
 
                         <div class="mb-3">
                             <label class="form-label">
-                                Created By
+                                أُنشئ بواسطة
                             </label>
 
                             <InputText class="form-control"
@@ -174,12 +172,12 @@
                             <button type="button"
                                     class="btn btn-secondary me-2"
                                     @onclick="closeAdd">
-                                Cancel
+                                إلغاء
                             </button>
 
                             <button type="submit"
                                     class="btn btn-success">
-                                Add
+                                إضافة
                             </button>
                         </div>
 
@@ -204,7 +202,7 @@
             <div class="modal-content">
 
                 <div class="modal-header">
-                    <h5>Add Item</h5>
+                    <h5>تعديل خصم</h5>
                     <button class="btn-close"
                             @onclick="closeEdit">
                     </button>
@@ -219,7 +217,7 @@
 
                         <div class="mb-3">
                             <label class="form-label">
-                                Amount
+                                Barber
                             </label>
 
                             <InputSelect class="form-control"
@@ -296,6 +294,14 @@
     </div>
 }
 
+<style>
+    .page-kicker { color:#2563eb; font-size:.72rem; font-weight:700; letter-spacing:.1em; margin-bottom:.3rem; text-transform:uppercase; }
+    .deduction-filter { display:flex; align-items:end; gap:.65rem; padding:1rem; border:1px solid #e2e8f0; border-radius:14px; background:#fff; box-shadow:0 3px 12px rgb(15 23 42 / .04); }
+    .deduction-filter .form-label { margin-bottom:.35rem; }
+    .deduction-content { padding-bottom:2rem; }
+    @@media (max-width:640px) { .deduction-filter { align-items:stretch; flex-direction:column; } .deduction-filter .btn { width:100%; } }
+</style>
+
 
 @if (showRemove)
 {
@@ -306,7 +312,7 @@
             <div class="modal-content">
 
                 <div class="modal-header">
-                    <h5>Delete Deduction</h5>
+                    <h5>حذف خصم</h5>
                     <button class="btn-close"
                             @onclick="closeRemove">
                     </button>

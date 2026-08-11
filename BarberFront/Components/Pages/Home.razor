@@ -6,8 +6,6 @@
 @inject OrderService orderService
 @inject IJSRuntime JS
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-
 <div class="pos-layout">
 
     <!-- ===== LEFT: Services ===== -->
@@ -15,8 +13,8 @@
 
         <div class="pos-left-header">
             <div class="pos-title-block">
-                <span class="pos-title">Services</span>
-                <span class="pos-count">@items.Count items</span>
+                <span class="pos-title">الخدمات</span>
+                <span class="pos-count">@items.Count خدمة</span>
             </div>
             <div class="pos-search">
                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
@@ -24,7 +22,7 @@
                     <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
                 </svg>
                 <input class="pos-search-input"
-                       placeholder="Search…"
+                       placeholder="ابحث عن خدمة..."
                        @bind="searchText"
                        @bind:event="oninput" />
             </div>
@@ -34,7 +32,7 @@
             @if (items.Count == 0)
             {
                 <div class="no-items">
-                    <p>No services found</p>
+                    <p>لا توجد خدمات</p>
                 </div>
             }
             @foreach (var item in items)
@@ -53,7 +51,7 @@
                         }
                         <span class="svc-name">@item.Name</span>
                     </div>
-                    <span class="svc-price">@item.Price <small>EGP</small></span>
+                    <span class="svc-price">@item.Price <small>ج.م</small></span>
                 </div>
             }
         </div>
@@ -65,7 +63,7 @@
         <div class="order-panel">
 
             <div class="order-top">
-                <span class="order-top-title">Order Summary</span>
+                <span class="order-top-title">ملخص الطلب</span>
                 @if (SelectedItem.Count > 0)
                 {
                     <span class="order-badge">@SelectedItem.Count</span>
@@ -76,10 +74,10 @@
 
                 <!-- Barber -->
                 <div class="form-row">
-                    <label class="form-lbl">Barber</label>
+                    <label class="form-lbl">الحلاق</label>
                     <div class="select-wrap">
                         <InputSelect @bind-Value="id" class="form-sel">
-                            <option value="">Select barber…</option>
+                            <option value="">اختر الحلاق...</option>
                             @foreach (var b in barberMVs)
                             {
                                 <option value="@b.Id">@b.Name</option>
@@ -95,7 +93,7 @@
 
                 <!-- Selected items -->
                 <div class="form-row">
-                    <label class="form-lbl">Selected Services</label>
+                    <label class="form-lbl">الخدمات المختارة</label>
 
                     @if (SelectedItem.Count == 0)
                     {
@@ -105,7 +103,7 @@
                                 <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
                                 <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
                             </svg>
-                            <span>No services added</span>
+                            <span>لم تتم إضافة خدمات</span>
                         </div>
                     }
                     else
@@ -116,9 +114,9 @@
                                 <div class="cart-row">
                                     <div class="cart-info">
                                         <span class="cart-name">@item.Name</span>
-                                        <span class="cart-price">@item.Price EGP</span>
+                                        <span class="cart-price">@item.Price ج.م</span>
                                     </div>
-                                    <button class="cart-remove" @onclick="() => Remove(item)">
+                                    <button class="cart-remove" @onclick="() => Remove(item)" aria-label="إزالة الخدمة" title="إزالة الخدمة">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13"
                                              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                                              stroke-linecap="round" stroke-linejoin="round">
@@ -134,16 +132,26 @@
 
                 <!-- Total -->
                 <div class="total-block">
-                    <span class="total-lbl">Total</span>
-                    <span class="total-num">@TotalPrice <small>EGP</small></span>
+                    <span class="total-lbl">الإجمالي</span>
+                    <span class="total-num">@TotalPrice <small>ج.م</small></span>
                 </div>
+
+                @if (!CanCompleteOrder && !isOrdering)
+                {
+                    <p class="order-hint">@(SelectedItem.Count == 0 ? "أضف خدمة واحدة على الأقل لإتمام الطلب." : "اختر الحلاق لإتمام الطلب.")</p>
+                }
+
+                @if (SelectedItem.Count > 0)
+                {
+                    <button type="button" class="clear-cart" @onclick="ClearOrder">إلغاء الطلب</button>
+                }
 
                 <!-- Complete -->
                 <button class="complete-btn" disabled="@(!CanCompleteOrder || isOrdering)" @onclick="CreatOrder">
                     @if (isOrdering)
                     {
                         <span class="btn-spin"></span>
-                        <span>Processing…</span>
+                        <span>جارٍ حفظ الطلب...</span>
                     }
                     else
                     {
@@ -151,7 +159,7 @@
                              fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="20 6 9 17 4 12" />
                         </svg>
-                        <span>Complete Order</span>
+                        <span>إتمام الطلب</span>
                     }
                 </button>
 
@@ -164,9 +172,8 @@
 <style>
     /* ── Root ─────────────────────────────────────── */
     .pos-layout {
-        font-family: 'Inter', sans-serif;
         display: flex;
-        height: calc(100vh - 2rem);
+        min-height: 100vh;
         overflow: hidden;
         background: #f8fafc;
         padding: 1rem;
@@ -232,7 +239,7 @@
         outline: none;
         background: transparent;
         font-size: 0.875rem;
-        font-family: 'Inter', sans-serif;
+        font-family: inherit;
         color: #1e293b;
         width: 100%;
     }
@@ -416,7 +423,7 @@
         border: 1.5px solid #dbd7d1;
         border-radius: 8px;
         font-size: 0.875rem;
-        font-family: 'Inter', sans-serif;
+        font-family: inherit;
         color: #2c3440;
         background: #f5f3ef;
         appearance: none;
@@ -546,7 +553,7 @@
         border-radius: 9px;
         font-size: 0.925rem;
         font-weight: 600;
-        font-family: 'Inter', sans-serif;
+        font-family: inherit;
         cursor: pointer;
         display: flex;
         align-items: center;
@@ -572,6 +579,31 @@
         box-shadow: none;
     }
 
+    .order-hint {
+        color: #b45309;
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+        border-radius: 8px;
+        font-size: 0.78rem;
+        margin: 0;
+        padding: 0.6rem 0.7rem;
+    }
+
+    .clear-cart {
+        color: #b91c1c;
+        background: transparent;
+        border: 1px solid #fecaca;
+        border-radius: 8px;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 0.82rem;
+        font-weight: 600;
+        padding: 0.6rem 0.75rem;
+        transition: background 0.15s, border-color 0.15s;
+    }
+
+    .clear-cart:hover { background: #fef2f2; border-color: #fca5a5; }
+
     .btn-spin {
         width: 15px;
         height: 15px;
@@ -583,6 +615,23 @@
     }
 
     @@keyframes spin { to { transform: rotate(360deg); } }
+
+    @@media (max-width: 900px) {
+        .pos-layout { height: auto; min-height: 100vh; flex-direction: column; overflow: visible; padding: 0.75rem; gap: 0.75rem; }
+        .pos-left { min-height: 56vh; padding: 1rem; }
+        .pos-right { width: 100%; min-width: 0; }
+        .order-panel { height: auto; }
+        .order-body { overflow: visible; }
+    }
+
+    @@media (max-width: 520px) {
+        .pos-left-header { align-items: stretch; margin-bottom: 1rem; }
+        .pos-search { max-width: none; flex: none; width: 100%; }
+        .services-grid { grid-template-columns: 1fr; overflow: visible; padding: 0; }
+        .svc-card { min-height: 60px; }
+        .pos-left { min-height: auto; overflow: visible; }
+        .order-body { padding: 1rem; }
+    }
 </style>
 
 @code {
@@ -643,10 +692,20 @@
         if (item != null) item.Selected = false;
     }
 
+    public void ClearOrder()
+    {
+        foreach (var item in originalItems)
+            item.Selected = false;
+
+        SelectedItem.Clear();
+        TotalPrice = 0;
+    }
+
     OrderD orderD = new();
 
     public async Task CreatOrder()
     {
+        var printWindowOpened = await JS.InvokeAsync<bool>("prepareOrderPrint");
         try
         {
             isOrdering = true;
@@ -661,9 +720,19 @@
 
             if (!respon.Status)
             {
+                if (printWindowOpened) await JS.InvokeVoidAsync("closeOrderPrintWindow");
                 await JS.InvokeVoidAsync("showToast2", respon.StatusMessage);
                 return;
             }
+
+            var barberName = barberMVs.FirstOrDefault(b => b.Id == id)?.Name ?? "-";
+            await JS.InvokeVoidAsync("printOrderReceipt", new
+            {
+                barberName,
+                items = SelectedItem.Select(item => new { name = item.Name, price = item.Price }),
+                total = TotalPrice,
+                date = DateTime.Now.ToString("dd/MM/yyyy HH:mm")
+            });
 
             await LoadData();
             orderD = new();
@@ -671,6 +740,11 @@
             id = string.Empty;
             TotalPrice = 0;
             await JS.InvokeVoidAsync("showToast", respon.StatusMessage);
+        }
+        catch (Exception ex)
+        {
+            if (printWindowOpened) await JS.InvokeVoidAsync("closeOrderPrintWindow");
+            await JS.InvokeVoidAsync("showToast2", $"تعذر إنشاء الطلب: {ex.Message}");
         }
         finally
         {

@@ -1,93 +1,59 @@
 @attribute [Authorize]
-
-
 @page "/barberAttendance/{id}"
 @inject BarberService barberService
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 
-<div class="container mt-4">
-
-    <div class="row align-items-center mb-4">
-
-        <div class="col">
-
-            <h2 class="fw-bold text-dark">
-                Attendance For @barberMV.Name
-            </h2>
-
-          
-
+<div class="container mt-4 barber-attendance-page">
+    <div class="attendance-hero">
+        <div>
+            <p class="page-kicker">حضور الفريق</p>
+            <h2 class="fw-bold text-dark">سجل حضور @barberMV.Name</h2>
+            <p class="text-muted mb-0">راجع سجل الحضور بالكامل أو ابحث خلال فترة زمنية محددة.</p>
         </div>
-
-        <div class="row">
-            <div class="col-md-6">
-                <label class="form-label">????? ???????</label>
-                <InputDate @bind-Value="date1"
-                           max="@DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd")"
-                           class="form-control" />
-            </div>
-
-            <div class="col-md-6">
-                <label class="form-label">????? ???????</label>
-                <InputDate @bind-Value="date2"
-                           max="@DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd")"
-                           class="form-control" />
-            </div>
-        </div>
-
-        <div class="mt-2">
-            <button class="btn btn-outline-primary" @onclick="Searche">
-                Search
-            </button>
-        </div>
-        <div class="mt-2">
-            <button class="btn btn-outline-primary" @onclick="AllList">
-               All Attend
-            </button>
-        </div>
+        <NavLink href="AttendanceForDay" class="btn btn-outline-secondary">العودة للحضور اليومي</NavLink>
     </div>
 
-
+    <section class="attendance-search card border-0 shadow-sm">
+        <div class="search-field">
+            <label class="form-label">من تاريخ</label>
+            <InputDate @bind-Value="date1" max="@DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd")" class="form-control" />
+        </div>
+        <div class="search-field">
+            <label class="form-label">إلى تاريخ</label>
+            <InputDate @bind-Value="date2" max="@DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd")" class="form-control" />
+        </div>
+        <button type="button" class="btn btn-primary" @onclick="Searche">بحث في السجل</button>
+        <button type="button" class="btn btn-outline-secondary" @onclick="AllList">عرض الكل</button>
+    </section>
 </div>
 
 @if (!showAll)
 {
-    <BarberAttendList id= "@id"></BarberAttendList>
+    <BarberAttendList id="@id" />
 }
 else
 {
-    <BarberAttendSearch id="@id" startDate="@date1" endDate="@date2" ></BarberAttendSearch>
+    <BarberAttendSearch id="@id" startDate="@date1" endDate="@date2" />
 }
 
+<style>
+    .page-kicker { color:#2563eb; font-size:.72rem; font-weight:700; letter-spacing:.1em; margin-bottom:.3rem; text-transform:uppercase; }
+    .attendance-hero { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; padding-bottom:1.25rem; margin-bottom:1.5rem; border-bottom:1px solid #e2e8f0; }
+    .attendance-search { display:grid !important; grid-template-columns:190px 190px auto auto; align-items:end; justify-content:start; gap:.75rem; padding:1rem !important; }
+    .search-field { min-width:180px; }
+    .search-field .form-label { margin-bottom:.35rem; }
+    @@media (max-width:640px) { .attendance-hero { align-items:stretch; flex-direction:column; } .attendance-search { display:flex !important; align-items:stretch; flex-direction:column; } .search-field { min-width:0; } .attendance-hero .btn,.attendance-search .btn { width:100%; } }
+</style>
 
-@code
-{
-    [Parameter]
-    public string? id { get; set; }
-    BarberMV barberMV = new BarberMV();
-
+@code {
+    [Parameter] public string? id { get; set; }
+    BarberMV barberMV = new();
     DateOnly date1 = DateOnly.FromDateTime(DateTime.Today);
     DateOnly date2 = DateOnly.FromDateTime(DateTime.Today);
-
-    public async Task LoadBarber()
-    {
-        barberMV = await barberService.GetBarberById(id);
-    }
-
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadBarber();
-    }
-
     bool showAll = false;
 
-    public void Searche()
-    {
-        showAll = true;
-    }
-
-    public void AllList()
-    {
-        showAll = false;
-    }
+    protected override async Task OnInitializedAsync() => await LoadBarber();
+    async Task LoadBarber() => barberMV = await barberService.GetBarberById(id);
+    void Searche() => showAll = true;
+    void AllList() => showAll = false;
 }

@@ -11,5 +11,8 @@ namespace Core.IRepository
         public Task<List<Salaries>> GetAllSalaries(Pagenation pagenation);
         public Task<Salaries> GetSalaryById(string salaryId);
         public Task<CheckLastSalary> GetCuurentSalaries(string barberId);
+        public Task<(decimal salary,decimal deduction)> GetMonthelyReport(DateTime start , DateTime end);
+        public Task<(decimal salaries , decimal deduction)> GetMonthelyBarberSalares(GenralDuration genral);
+
     }
 }

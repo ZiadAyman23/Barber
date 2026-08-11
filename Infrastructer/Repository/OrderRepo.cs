@@ -11,6 +11,19 @@ namespace Infrastructer.Repository
             this.dataContext = dataContext;
         }
 
+        public async Task<int> GetMonthelyBarberOrders(GenralDuration genral)
+        {
+            var count = await dataContext.Orders.Where(e=>e.BarberId==genral.BarberId && e.Date>= genral.StartDate && e.Date<genral.EndDate).CountAsync();
+            return count;
+        }
+
+        public async Task<(decimal salary, int Count)> GetMonthelyReport(DateTime start, DateTime end)
+        {
+            var ordersSales = await dataContext.Orders.Where(e=>e.Date>= start && e.Date<end).SumAsync(e => e.TotalPrice);
+            var OrderCount = await dataContext.Orders.Where(e => e.Date >= start && e.Date < end).CountAsync();
+            return (ordersSales, OrderCount);
+        }
+
         public async Task<List<Order>> GetOrderByDate(DateTime dateTime)
         {
             var start = dateTime.Date;

@@ -70,6 +70,7 @@ namespace BarberFront
             builder.Services.AddScoped<OrderService>();
             builder.Services.AddScoped<SalaryService>();
             builder.Services.AddScoped<AccountService>();
+            builder.Services.AddScoped<MonthelyReportServ>();
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.

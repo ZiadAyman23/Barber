@@ -1,25 +1,25 @@
 ﻿@page "/weather"
 @attribute [StreamRendering]
 
-<PageTitle>Weather</PageTitle>
+<PageTitle>الطقس</PageTitle>
 
-<h1>Weather</h1>
+<h1>الطقس</h1>
 
-<p>This component demonstrates showing data.</p>
+<p>تعرض هذه الصفحة بيانات الطقس.</p>
 
 @if (forecasts == null)
 {
-    <p><em>Loading...</em></p>
+    <p><em>جارٍ التحميل...</em></p>
 }
 else
 {
     <table class="table">
         <thead>
             <tr>
-                <th>Date</th>
-                <th aria-label="Temperature in Celsius">Temp. (C)</th>
-                <th aria-label="Temperature in Fahrenheit">Temp. (F)</th>
-                <th>Summary</th>
+                <th>التاريخ</th>
+                <th aria-label="درجة الحرارة بالسيلسيوس">الحرارة (م)</th>
+                <th aria-label="درجة الحرارة بالفهرنهايت">الحرارة (ف)</th>
+                <th>الملخص</th>
             </tr>
         </thead>
         <tbody>

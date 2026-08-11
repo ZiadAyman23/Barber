@@ -18,6 +18,7 @@ D:\cSharb\Barbershop\BarberFront\wwwroot\lib\bootstrap\dist\js\bootstrap.bundle.
 D:\cSharb\Barbershop\BarberFront\wwwroot\lib\bootstrap\dist\js\bootstrap.bundle.js.map
 D:\cSharb\Barbershop\BarberFront\wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.rtl.min.css.map
 D:\cSharb\Barbershop\BarberFront\wwwroot\app.css
+D:\cSharb\Barbershop\BarberFront\wwwroot\lib\jspdf\jspdf.umd.min.js
 D:\cSharb\Barbershop\BarberFront\wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.min.css.map
 D:\cSharb\Barbershop\BarberFront\wwwroot\JS\site.js
 D:\cSharb\Barbershop\BarberFront\wwwroot\lib\bootstrap\dist\css\bootstrap.min.css
@@ -25,6 +26,7 @@ D:\cSharb\Barbershop\BarberFront\wwwroot\lib\bootstrap\dist\css\bootstrap-reboot
 D:\cSharb\Barbershop\BarberFront\wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.rtl.css
 D:\cSharb\Barbershop\BarberFront\wwwroot\lib\bootstrap\dist\css\bootstrap-grid.css
 D:\cSharb\Barbershop\BarberFront\wwwroot\lib\bootstrap\dist\js\bootstrap.bundle.min.js.map
+D:\cSharb\Barbershop\BarberFront\wwwroot\lib\chartjs\chart.umd.min.js
 D:\cSharb\Barbershop\BarberFront\wwwroot\lib\bootstrap\dist\css\bootstrap-grid.rtl.min.css.map
 D:\cSharb\Barbershop\BarberFront\wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.css
 D:\cSharb\Barbershop\BarberFront\wwwroot\lib\bootstrap\dist\css\bootstrap-grid.min.css.map
@@ -47,9 +49,11 @@ D:\cSharb\Barbershop\BarberFront\wwwroot\lib\bootstrap\dist\css\bootstrap-reboot
 D:\cSharb\Barbershop\BarberFront\wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.rtl.min.css
 C:\Users\Ziad\.nuget\packages\microsoft.aspnetcore.app.internal.assets\10.0.10\_framework\blazor.web.js
 D:\cSharb\Barbershop\BarberFront\wwwroot\lib\bootstrap\dist\js\bootstrap.min.js
+D:\cSharb\Barbershop\BarberFront\wwwroot\JS\report-chart.js
 D:\cSharb\Barbershop\BarberFront\wwwroot\lib\bootstrap\dist\js\bootstrap.esm.js.map
 D:\cSharb\Barbershop\BarberFront\wwwroot\lib\bootstrap\dist\css\bootstrap-grid.rtl.min.css
 D:\cSharb\Barbershop\BarberFront\wwwroot\lib\bootstrap\dist\css\bootstrap-grid.css.map
+wwwroot\JS\report-chart.js
 wwwroot\JS\site.js
 wwwroot\app.css
 wwwroot\favicon.png
@@ -97,3 +101,5 @@ wwwroot\lib\bootstrap\dist\js\bootstrap.js
 wwwroot\lib\bootstrap\dist\js\bootstrap.js.map
 wwwroot\lib\bootstrap\dist\js\bootstrap.min.js
 wwwroot\lib\bootstrap\dist\js\bootstrap.min.js.map
+wwwroot\lib\chartjs\chart.umd.min.js
+wwwroot\lib\jspdf\jspdf.umd.min.js

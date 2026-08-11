@@ -73,9 +73,9 @@ namespace Barbershop
 
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy("AllowAll", builder =>
+                options.AddPolicy("AllowBlazor", policy =>
                 {
-                    builder.WithOrigins("https://localhost:7106")
+                    policy.WithOrigins("https://localhost:7106")
                            .AllowAnyMethod()
                            .AllowAnyHeader()
                            .AllowCredentials();
@@ -91,6 +91,7 @@ namespace Barbershop
             builder.Services.AddScoped<IDeductionService, DeductionServes>();
             builder.Services.AddScoped<IOrderService, OrderService>();
             builder.Services.AddScoped<ISalaryService, SalaryService>();
+            builder.Services.AddScoped<IMonthelyReportService, MonthelyReportService>();
 
             // Add Repository 
             builder.Services.AddScoped<IItemRepo, ItemRepo>();

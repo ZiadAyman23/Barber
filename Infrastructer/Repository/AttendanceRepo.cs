@@ -35,6 +35,15 @@ namespace Infrastructer.Repository
             return attendances;
         }
 
+        public async Task<int> GetMonthelyBarberAttend(GenralDuration genral)
+        {
+            DateOnly start = DateOnly.FromDateTime(genral.StartDate);
+            DateOnly end = DateOnly.FromDateTime(genral.EndDate);
+
+            var count = await dataContext.Attendances.Where(e=>e.IsAddent== 0 && e.BarberId==genral.BarberId && e.Date>=start && e.Date<end ).CountAsync();
+            return count;
+        }
+
         async Task IAttendanceRepo.AddAttendance(Attendance attendance)
         {
             var attendanceExists = dataContext.Attendances.Any(a => a.BarberId == attendance.BarberId && a.Date == attendance.Date);

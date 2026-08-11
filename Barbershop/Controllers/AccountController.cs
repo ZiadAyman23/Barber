@@ -18,7 +18,6 @@ namespace Barbershop.Controllers
         {
             try
             {
-                Console.WriteLine($"'{model.Name}'");
                 var tokens = await _appUserService.Login(model);
                 return Ok(tokens);
             }
@@ -36,14 +35,11 @@ namespace Barbershop.Controllers
         {
             try
             {
-                Console.WriteLine($"[AccountController] RefreshToken request received. Token: '{request?.RefreshToken}'");
                 var tokens = await _appUserService.RefreshToken(request.RefreshToken);
-                Console.WriteLine("[AccountController] RefreshToken call succeeded, returning tokens.");
                 return Ok(tokens);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[AccountController] RefreshToken error: {ex}");
                 return BadRequest(new { message = ex.Message });
             }
         }

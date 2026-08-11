@@ -33,6 +33,25 @@ namespace Infrastructer.Repository
             };
         }
 
+        public async Task<(decimal salaries, decimal deduction)> GetMonthelyBarberSalares(GenralDuration genral)
+        {
+            var sal = await dataContext.Salaries.Where(e => e.BarberID == genral.BarberId && e.EffectiveDate >= genral.StartDate && e.EffectiveDate < genral.EndDate)
+                .SumAsync(e => e.SalaryAmount);
+            var ded = await dataContext.Salaries.Where(e => e.BarberID == genral.BarberId && e.EffectiveDate >= genral.StartDate && e.EffectiveDate < genral.EndDate)
+                .SumAsync(e => e.DeductionAmount);
+            return (sal, ded); 
+        }
+
+        public async Task<(decimal salary, decimal deduction)> GetMonthelyReport(DateTime start, DateTime end)
+        {
+
+            var saleries = await dataContext.Salaries.Where(e => e.EffectiveDate >= start && e.EffectiveDate < end).SumAsync(e => e.SalaryAmount);
+            var deduction = await dataContext.Salaries.Where(e => e.EffectiveDate >= start && e.EffectiveDate < end).SumAsync(e => e.DeductionAmount);
+
+            return (saleries, deduction);
+
+        }
+
         async Task ISalaryRepo.AddSalary(Salaries salaries)
         {
             await dataContext.Salaries.AddAsync(salaries);

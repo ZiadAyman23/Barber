@@ -1,215 +1,58 @@
-@attribute [Authorize]
 @inject AttentanceService attentanceService
 @inject IJSRuntime JS
-@rendermode @(new InteractiveServerRenderMode(prerender: false))
 
-<div>
-    <table class="table mt-4">
-        <thead>
-            <tr>
-                <th scope="col">Date</th>
-                <th scope="col">Status</th>
-                <th scope="col"></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in attendanceMVs)
-            {
-                <tr>
-
-                    <td>@item.Date.ToString("yyyy-MM-dd")</td>
-                    @if (item.Status == "Present")
-                    {
-                        <td><span class="badge bg-success">@item.Status</span></td>
-
-                    }
-                    else if (item.Status == "Absent")
-                    {
-                        <td><span class="badge bg-danger">@item.Status</span></td>
-
-                    }
-                    else
-                    {
-                        <td><span class="badge bg-warning">Not Recorded</span></td>
-
-                    }
-                    <td><button class="btn btn-outline-primary" @onclick="() => openEdit(item.AttendanceId,item.Status)">Edit</button></td>
-                </tr>
-            }
-        </tbody>
-    </table>
-    
-    <div class="d-flex justify-content-center mt-3">
-        <label>Page @pagenation.PageNumber</label>
+<div class="container barber-history-list">
+    <div class="card border-0 shadow-sm overflow-hidden">
+        <div class="history-heading"><div><p class="page-kicker">سجل الحضور</p><h5>كل الأيام المسجلة</h5></div><span class="badge bg-light text-dark border">صفحة @pagenation.PageNumber</span></div>
+        <table class="table mb-0">
+            <thead><tr><th>التاريخ</th><th>الحالة</th><th class="text-end">الإجراء</th></tr></thead>
+            <tbody>
+                @foreach (var item in attendanceMVs)
+                {
+                    <tr>
+                        <td class="fw-semibold text-dark">@item.Date.ToString("dddd, dd MMM yyyy")</td>
+                        <td>
+                            @if (item.Status == "Present") { <span class="badge bg-success">حاضر</span> }
+                            else if (item.Status == "Absent") { <span class="badge bg-danger">غائب</span> }
+                            else { <span class="badge bg-warning text-dark">غير مسجل</span> }
+                        </td>
+                        <td class="text-end"><button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => openEdit(item.AttendanceId, item.Status)">تعديل</button></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        @if (!attendanceMVs.Any()) { <div class="history-empty">لا توجد سجلات حضور متاحة.</div> }
     </div>
-    <div class="d-flex justify-content-center mt-3">
-        <button class="btn btn-outline-dark me-2" @onclick="previousPag">Previous</button>
-
-        <button class="btn btn-outline-dark me-2" @onclick="nextPag">Next</button>
-    </div>
+    <div class="history-pagination"><button class="btn btn-outline-secondary" @onclick="previousPag">السابق</button><button class="btn btn-outline-secondary" @onclick="nextPag">التالي</button></div>
 </div>
 
-
-
-@if (showEdit == true)
+@if (showEdit)
 {
-
-    <div class="modal fade show d-block"
-         style="background-color:rgba(0,0,0,.5)">
-
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-
-                <div class="modal-header">
-                    <h5>Edit Item</h5>
-                    <button class="btn-close"
-                            @onclick="CloseEditBarberModal">
-                    </button>
-                </div>
-
-                <div class="modal-body">
-
-                    <EditForm Model="@attendanceD" OnValidSubmit="EditAttend">
-
-                        <DataAnnotationsValidator />
-                        <ValidationSummary />
-
-                        <div class="mb-3">
-                            <label class="form-label">
-                                Status
-                            </label>
-
-                            <InputCheckbox @bind-Value="attendanceD.IsPresent" />
-
-                            <ValidationMessage For="@(() => attendanceD.IsPresent)" />
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Password</label>
-                            <input type="password" class="form-control" @bind="checkAccess.pass" />
-                            <ValidationMessage For="@(() => checkAccess.pass)" />
-                        </div>
-
-                        <div class="text-end">
-                            <button type="button"
-                                    class="btn btn-secondary me-2"
-                                    @onclick="CloseEditBarberModal">
-                                Cancel
-                            </button>
-
-                            <button type="submit"
-                                    class="btn btn-success">
-                                Edit
-                            </button>
-                        </div>
-
-                    </EditForm>
-
-                </div>
-
-            </div>
-        </div>
+    <div class="modal fade show d-block" style="background-color:rgba(0,0,0,.5)">
+        <div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5>تعديل الحضور</h5><button type="button" class="btn-close" @onclick="CloseEditBarberModal"></button></div>
+            <div class="modal-body"><EditForm Model="@attendanceD" OnValidSubmit="EditAttend"><DataAnnotationsValidator /><ValidationSummary />
+                <div class="mb-3"><label class="form-label">الحالة</label><div class="form-check"><InputCheckbox class="form-check-input" @bind-Value="attendanceD.IsPresent" /><label class="form-check-label">تسجيل هذا اليوم كحاضر</label></div></div>
+                <div class="mb-3"><label class="form-label">كلمة المرور</label><input type="password" class="form-control" @bind="checkAccess.pass" /><ValidationMessage For="@(() => checkAccess.pass)" /></div>
+                <div class="text-end"><button type="button" class="btn btn-secondary me-2" @onclick="CloseEditBarberModal">إلغاء</button><button type="submit" class="btn btn-success">حفظ التعديل</button></div>
+            </EditForm></div>
+        </div></div>
     </div>
 }
 
+<style>
+    .barber-history-list { padding-bottom:2rem; } .history-heading { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:1.1rem 1.25rem; } .history-heading h5 { margin:0; font-weight:700; } .history-heading .page-kicker { color:#2563eb; font-size:.7rem; font-weight:700; letter-spacing:.1em; margin:0 0 .2rem; text-transform:uppercase; } .history-empty { color:#64748b; padding:2rem; text-align:center; } .history-pagination { display:flex; justify-content:center; gap:.5rem; margin-top:1rem; }
+</style>
+
 @code {
-    [Parameter]
-    public string? id { get; set; }
-
-    List<AttendanceMV> attendanceMVs = new List<AttendanceMV>();
-    Pagenation pagenation = new Pagenation { PageNumber = 1, PageSize = 10 };
-
-
-    public async Task LoadAttend()
-    {
-
-        attendanceMVs = await attentanceService.GatAttendByBarberId(id, pagenation);
-
-    }
-
-    protected override async Task OnParametersSetAsync()
-    {
-        await LoadAttend();
-    }
-
-    public async Task nextPag()
-    {
-        if (attendanceMVs.Count < 10)
-        {
-            await JS.InvokeVoidAsync("showToast2", "No More Attend");
-            return;
-        }
-
-        pagenation.PageNumber += 1;
-        await LoadAttend();
-        if (attendanceMVs.Count == 0)
-        {
-            pagenation.PageNumber -= 1;
-            await LoadAttend();
-            await JS.InvokeVoidAsync("showToast4", "NO Next Page");
-
-        }
-
-    }
-
-    public async Task previousPag()
-    {
-        if (pagenation.PageNumber > 1)
-        {
-            pagenation.PageNumber -= 1;
-            await LoadAttend();
-        }
-        else
-        {
-            await JS.InvokeVoidAsync("showToast4", "?? ???? ???? ??? ");
-        }
-
-    }
-
-    //Edit
-    string AttendiId = string.Empty;
-    bool showEdit = false;
-    CheckAccess checkAccess = new CheckAccess();
-
-    AttendanceD attendanceD = new AttendanceD();
-    public void openEdit(string id, string status)
-    {
-
-        AttendiId = id;
-        attendanceD.IsPresent = status == "Present";
-        checkAccess = new CheckAccess();
-        showEdit = true;
-
-
-    }
-
-
-    public void CloseEditBarberModal()
-    {
-        showEdit = false;
-        checkAccess = new CheckAccess();
-
-    }
-
-    public async Task EditAttend()
-    {
-        await JS.InvokeVoidAsync("showLoading");
-
-        var respons = await attentanceService.UpdateAttend(attendanceD, AttendiId, checkAccess);
-
-        await JS.InvokeVoidAsync("hideLoading");
-
-        showEdit = false;
-
-        await LoadAttend();
-
-        if (respons.Status)
-        {
-            await JS.InvokeVoidAsync("showToast", respons.StatusMessage);
-        }
-        else
-        {
-            await JS.InvokeVoidAsync("showToast2", respons.StatusMessage);
-        }
-    }
+    [Parameter] public string? id { get; set; }
+    List<AttendanceMV> attendanceMVs = new();
+    Pagenation pagenation = new() { PageNumber = 1, PageSize = 10 };
+    async Task LoadAttend() => attendanceMVs = await attentanceService.GatAttendByBarberId(id, pagenation);
+    protected override async Task OnParametersSetAsync() => await LoadAttend();
+    async Task nextPag() { if (attendanceMVs.Count < 10) { await JS.InvokeVoidAsync("showToast2", "No more attendance records."); return; } pagenation.PageNumber++; await LoadAttend(); if (!attendanceMVs.Any()) { pagenation.PageNumber--; await LoadAttend(); await JS.InvokeVoidAsync("showToast4", "No more attendance records."); } }
+    async Task previousPag() { if (pagenation.PageNumber == 1) { await JS.InvokeVoidAsync("showToast4", "You are already on the first page."); return; } pagenation.PageNumber--; await LoadAttend(); }
+    string AttendiId = string.Empty; bool showEdit; CheckAccess checkAccess = new(); AttendanceD attendanceD = new();
+    void openEdit(string id, string status) { AttendiId = id; attendanceD.IsPresent = status == "Present"; checkAccess = new(); showEdit = true; }
+    void CloseEditBarberModal() { showEdit = false; checkAccess = new(); }
+    async Task EditAttend() { await JS.InvokeVoidAsync("showLoading"); var respons = await attentanceService.UpdateAttend(attendanceD, AttendiId, checkAccess); await JS.InvokeVoidAsync("hideLoading"); showEdit = false; await LoadAttend(); if (respons.Status) await JS.InvokeVoidAsync("showToast", respons.StatusMessage); else await JS.InvokeVoidAsync("showToast2", respons.StatusMessage); }
 }

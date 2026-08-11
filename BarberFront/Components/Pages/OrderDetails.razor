@@ -14,7 +14,7 @@
         <i class="bi bi-arrow-left"></i> Back
     </button>
 
-    <div class="card shadow border-0">
+    <div id="order-receipt" class="card shadow border-0">
 
         <div class="card-header bg-dark text-white">
             <h3 class="mb-0">
@@ -30,7 +30,7 @@
                 <div class="col-md-4">
                     <div class="border rounded p-3">
                         <i class="bi bi-person-fill fs-2 text-primary"></i>
-                        <h6 class="mt-2 mb-1">Barber</h6>
+                        <h6 class="mt-2 mb-1">الحلاق</h6>
                         <h5>@orderMV.BarberName</h5>
                     </div>
                 </div>
@@ -38,7 +38,7 @@
                 <div class="col-md-4">
                     <div class="border rounded p-3">
                         <i class="bi bi-calendar-event fs-2 text-success"></i>
-                        <h6 class="mt-2 mb-1">Date</h6>
+                        <h6 class="mt-2 mb-1">التاريخ</h6>
                         <h5>@orderMV.Date.ToString("dd/MM/yyyy")</h5>
                     </div>
                 </div>
@@ -46,7 +46,7 @@
                 <div class="col-md-4">
                     <div class="border rounded p-3">
                         <i class="bi bi-cash-stack fs-2 text-warning"></i>
-                        <h6 class="mt-2 mb-1">Total</h6>
+                        <h6 class="mt-2 mb-1">الإجمالي</h6>
                         <h4 class="text-success">@orderMV.TotalPrice.ToString("F2") EGP</h4>
                     </div>
                 </div>
@@ -76,7 +76,7 @@
 
             <div class="d-flex justify-content-between">
 
-                <h4>Total</h4>
+                <h4>الإجمالي</h4>
 
                 <h3 class="text-success">
                     @orderMV.TotalPrice.ToString("F2") EGP
@@ -88,7 +88,7 @@
 
         <div class="card-footer text-end">
 
-            <button class="btn btn-success me-2">
+            <button class="btn btn-success me-2" @onclick="PrintOrder">
                 <i class="bi bi-printer"></i>
                 Print
             </button>
@@ -111,7 +111,7 @@
             <div class="modal-content">
 
                 <div class="modal-header">
-                    <h4>Edit Order</h4>
+                    <h4>تعديل الطلب</h4>
 
                     <button type="button"
                             class="btn-close"
@@ -124,7 +124,7 @@
                     <div class="modal-body">
 
                         <div class="mb-3">
-                            <label>Barber</label>
+                            <label>الحلاق</label>
 
                             <InputSelect class="form-select"
                                          @bind-Value="order.BarberId">
@@ -141,7 +141,7 @@
 
                         <hr />
 
-                        <h5>Selected Services</h5>
+                        <h5>الخدمات المختارة</h5>
 
                         @foreach (var item in order.orderItemDs)
                         {
@@ -160,7 +160,7 @@
                         
                              <div class="d-flex justify-content-between">
 
-                              <h4>Total</h4>
+                              <h4>الإجمالي</h4>
     
                             <h3 class="text-success">
                             <i>@order.TotalPrice.ToString("F2") EGP</i>
@@ -208,7 +208,7 @@
 
 
                         <div class="mb-3">
-                            <label class="form-label">Password</label>
+                            <label class="form-label">كلمة المرور</label>
                             <input type="password" class="form-control" @bind="checkAccess.pass" />
                             <ValidationMessage For="@(() => checkAccess.pass)" />
                         </div>
@@ -260,6 +260,17 @@
     void GoBack()
     {
         Navigation.NavigateTo("/order");
+    }
+
+    async Task PrintOrder()
+    {
+        await JS.InvokeVoidAsync("printOrderReceipt", new
+        {
+            barberName = orderMV.BarberName,
+            items = orderMV.Items.Select(item => new { name = item.name, price = item.price }),
+            total = orderMV.TotalPrice,
+            date = orderMV.Date.ToString("dd/MM/yyyy HH:mm")
+        });
     }
 
 

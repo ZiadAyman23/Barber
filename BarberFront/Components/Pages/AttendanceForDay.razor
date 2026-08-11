@@ -6,29 +6,26 @@
 @inject IJSRuntime JS
 
 
-<div class="container mt-4">
+<div class="container mt-4 attendance-page">
 
     <div class="row align-items-center mb-4">
 
         <div class="col">
 
-            <h2 class="fw-bold text-dark">
-                Attendance For @selectedDate
-            </h2>
-
-          
+            <p class="page-kicker">العمليات اليومية</p>
+            <h2 class="fw-bold text-dark">الحضور والغياب</h2>
+            <p class="text-muted mb-0">راجع وسجل حضور فريقك في اليوم المحدد.</p>
 
         </div>
 
-        <div class="col-auto">
-
+        <div class="col-auto attendance-filter">
+            <label class="form-label">تاريخ الحضور</label>
             <InputDate @bind-Value="selectedDate"
                        max="@DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd")"
                        @bind-Value:after="LoadAttendance"
                        class="form-control" />
-                       <br />
-            <button class="btn btn-primary">
-                Search
+            <button type="button" class="btn btn-primary" @onclick="LoadAttendance">
+                بحث
             </button>
         </div>
        
@@ -40,15 +37,17 @@
 
 
 
+<div class="container attendance-content">
 @if (!AtttendanceRecorded)
 {
-    <table class="table">
+    <div class="card border-0 shadow-sm overflow-hidden">
+    <table class="table mb-0">
         <thead>
 
             <tr>
-                <th scope="col">Name</th>
-                <th scope="col">Status</th>
-                <th scope="col">Present</th>
+                <th scope="col">الاسم</th>
+                <th scope="col">الحالة</th>
+                <th scope="col" class="text-center">غائب اليوم</th>
 
             </tr>
         </thead>
@@ -60,14 +59,14 @@
                     @if (_item.StartDate > selectedDate)
                     {
                        
-                        <td><span class="badge bg-secondary">Not Started</span></td>
+                        <td><span class="badge bg-secondary">لم يبدأ العمل</span></td>
                         <td></td>
                     }
                     else
                     {
-                        <td><span class="badge bg-warning">Not Recorded</span></td>
+                        <td><span class="badge bg-warning text-dark">غير مسجل</span></td>
                         
-                        <td><InputCheckbox @bind-Value="_item.IsAbsentToday" /> </td>
+                        <td class="text-center"><InputCheckbox class="attendance-check" @bind-Value="_item.IsAbsentToday" /> </td>
                     }
                    
 
@@ -78,28 +77,30 @@
 
 
     </table>
+    </div>
     @if (barberList.Any(b => b.StartDate <= selectedDate))
     {
 
-        <button class="btn btn-primary" @onclick="SaveAttendance">Record Attendance</button>
+        <button class="btn btn-success mt-3" @onclick="SaveAttendance">تسجيل الحضور</button>
     }
     else if (barberList.Any(b => b.StartDate > selectedDate))
     {
         <div class="alert alert-info mt-3">
-            No barbers have started on or before the selected date.
+            لا يوجد حلاقون بدأوا العمل في التاريخ المحدد أو قبله.
         </div>
     }
 
 }
 else
 {
-    <table class="table">
+    <div class="card border-0 shadow-sm overflow-hidden">
+    <table class="table mb-0">
         <thead>
 
             <tr>
-                <th scope="col">Name</th>
+                <th scope="col">الاسم</th>
                 
-                <th scope="col">Status</th>
+                <th scope="col">الحالة</th>
                 <th scope="col"></th>
                 <th scope="col">    </th>
 
@@ -113,30 +114,31 @@ else
                    
                     @if (_item.Status == "Present")
                     {
-                        <td><span class="badge bg-success">@_item.Status</span></td>
-                        <td><button class="btn btn-sm btn-primary" @onclick="() => openEdit(_item.AttendanceId, _item.Status)">Edit</button></td>
+                        <td><span class="badge bg-success">حاضر</span></td>
+                        <td><button class="btn btn-sm btn-primary" @onclick="() => openEdit(_item.AttendanceId, _item.Status)">تعديل</button></td>
                     }
                     else if (_item.Status == "Absent")
                     {
-                        <td><span class="badge bg-danger">@_item.Status</span></td>
-                        <td><button class="btn btn-sm btn-primary" @onclick="() => openEdit(_item.AttendanceId,_item.Status)">Edit</button></td>
+                        <td><span class="badge bg-danger">غائب</span></td>
+                        <td><button class="btn btn-sm btn-primary" @onclick="() => openEdit(_item.AttendanceId,_item.Status)">تعديل</button></td>
                     }
                     else
                     {
-                        <td><span class="badge bg-warning">Not Recorded</span></td>
-                        <td><button class="btn btn-success">Attend</button></td>
-                        <td><button class="btn btn-danger">Absent</button></td>
+                        <td><span class="badge bg-warning text-dark">غير مسجل</span></td>
+                        <td><button class="btn btn-success">حاضر</button></td>
+                        <td><button class="btn btn-danger">غائب</button></td>
                     }
                     <td>
                         <NavLink href="@($"/barberAttendance/{_item.BarberId}")"
                                  class="btn btn-sm btn-success">
-                            Details
+                            التفاصيل
                         </NavLink>
                     </td>
                 </tr>
             }
         </tbody>
     </table>
+    </div>
 }
 
 
@@ -144,10 +146,11 @@ else
 
 @if (!string.IsNullOrWhiteSpace(Massage))
 {
-    <div class="alert alert-danger">
-        @Massage
-    </div>
+        <div class="alert alert-danger mt-3">
+            @Massage
+        </div>
 }
+</div>
 
 
 
@@ -163,7 +166,7 @@ else
             <div class="modal-content">
 
                 <div class="modal-header">
-                    <h5>Edit Item</h5>
+                    <h5>تعديل الحضور</h5>
                     <button class="btn-close"
                             @onclick="CloseEditBarberModal">
                     </button>
@@ -178,7 +181,7 @@ else
 
                         <div class="mb-3">
                             <label class="form-label">
-                                Status
+                                الحالة
                             </label>
 
                             <InputCheckbox @bind-Value="attendanceD1.IsPresent" />
@@ -187,7 +190,7 @@ else
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Password</label>
+                            <label class="form-label">كلمة المرور</label>
                             <input type="password" class="form-control" @bind="checkAccess.pass" />
                             <ValidationMessage For="@(() => checkAccess.pass)" />
                         </div>
@@ -196,12 +199,12 @@ else
                             <button type="button"
                                     class="btn btn-secondary me-2"
                                     @onclick="CloseEditBarberModal">
-                                Cancel
+                                إلغاء
                             </button>
 
                             <button type="submit"
                                     class="btn btn-success">
-                                Edit
+                                حفظ
                             </button>
                         </div>
 
@@ -213,6 +216,16 @@ else
         </div>
     </div>
 }
+
+<style>
+    .page-kicker { color:#2563eb; font-size:.72rem; font-weight:700; letter-spacing:.1em; margin-bottom:.3rem; text-transform:uppercase; }
+    .attendance-filter { display:flex; align-items:end; gap:.65rem; padding:.8rem; border:1px solid #e2e8f0; border-radius:12px; background:#fff; }
+    .attendance-filter .form-label { margin:0; white-space:nowrap; }
+    .attendance-filter .form-control { width:155px; }
+    .attendance-content { padding-bottom:2rem; }
+    .attendance-check { width:1.1rem; height:1.1rem; cursor:pointer; }
+    @@media (max-width:640px) { .attendance-filter { align-items:stretch; flex-direction:column; width:100%; } .attendance-filter .form-control { width:100%; } }
+</style>
 
 @code {
 

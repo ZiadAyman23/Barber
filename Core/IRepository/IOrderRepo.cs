@@ -11,6 +11,9 @@
         public Task<List<Order>> GetAllBarberOrders(string BarberID,Pagenation pagenation);
         public Task<(decimal, int)> GetOrdersByBarberId(string barberId, DateTime startDate);
         public Task<List<Order>> GetOrderByDateRange( GenralDuration duration);
+        public Task<(decimal salary ,int Count)> GetMonthelyReport(DateTime start, DateTime end);
+        public Task<int> GetMonthelyBarberOrders(GenralDuration genral);
+
 
     }
 }

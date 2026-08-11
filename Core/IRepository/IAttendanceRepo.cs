@@ -11,5 +11,6 @@
         public Task<List<Attendance>> GetAttendanceByBarberId(Pagenation pagenation, string barberId);
         public Task<(List<Attendance> attendances, string message, int Count)> GetDurrationAttendance(Pagenation pagenation, DurationBarberAttend duration);
         public Task<List<Attendance>> GetDurationAttenWithoutPag(GenralDuration duration);
+        public Task<int> GetMonthelyBarberAttend(GenralDuration genral);
     }
 }

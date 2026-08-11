@@ -11,11 +11,11 @@
         <div class="col">
 
             <h2 class="fw-bold text-dark d-flex align-items-center gap-2">
-                <i class="bi bi-wallet2 text-primary"></i> Expense Management
+                <i class="bi bi-wallet2 text-primary"></i> إدارة المصروفات
             </h2>
 
             <p class="text-muted mb-0">
-                Manage your barbershop expenses.
+                راجع وسجل مصروفات الصالون.
             </p>
 
         </div>
@@ -24,7 +24,7 @@
 
             <button class="btn btn-success px-4 d-flex align-items-center gap-2"
                     @onclick="OpenAddExpenseModal">
-                <i class="bi bi-plus-lg"></i> Add Expense
+                <i class="bi bi-plus-lg"></i> إضافة مصروف
             </button>
 
         </div>
@@ -41,10 +41,10 @@
             </div>
             <div class="col-auto d-flex gap-2">
                 <button class="btn btn-primary d-flex align-items-center gap-1" @onclick="GetByDate">
-                    <i class="bi bi-search"></i> Search
+                    <i class="bi bi-search"></i> بحث
                 </button>
                 <button class="btn btn-outline-secondary d-flex align-items-center gap-1" @onclick="getAllExpens">
-                    <i class="bi bi-arrow-counterclockwise"></i> Show All
+                    <i class="bi bi-arrow-counterclockwise"></i> عرض الكل
                 </button>
             </div>
         </div>
@@ -57,11 +57,11 @@
         <table class="table mb-0 align-middle">
             <thead>
                 <tr>
-                    <th scope="col">Amount</th>
-                    <th scope="col">Reason</th>
-                    <th scope="col">Created By</th>
-                    <th scope="col">Date</th>
-                    <th scope="col" class="text-end">Actions</th>
+                    <th scope="col">المبلغ</th>
+                    <th scope="col">السبب</th>
+                    <th scope="col">أُنشئ بواسطة</th>
+                    <th scope="col">التاريخ</th>
+                    <th scope="col" class="text-end">الإجراءات</th>
                 </tr>
             </thead>
             <tbody>
@@ -89,8 +89,8 @@
     @if (!hideNextButton)
     {
         <div class="d-flex justify-content-center my-4">
-            <button class="btn btn-outline-secondary me-2" @onclick="previousPag">Previous</button>
-            <button class="btn btn-outline-secondary" @onclick="nextPag">Next</button>
+            <button class="btn btn-outline-secondary me-2" @onclick="previousPag">السابق</button>
+            <button class="btn btn-outline-secondary" @onclick="nextPag">التالي</button>
         </div>
     }
 </div>
@@ -102,7 +102,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Add Expense</h5>
+                    <h5 class="modal-title">إضافة مصروف</h5>
                     <button class="btn-close" @onclick="CloseAddExpenseModal"></button>
                 </div>
                 <div class="modal-body">
@@ -111,26 +111,26 @@
                         <ValidationSummary />
 
                         <div class="mb-3">
-                            <label class="form-label">Amount</label>
+                            <label class="form-label">المبلغ</label>
                             <InputNumber class="form-control" @bind-Value="expenseAdd.Amount" />
                             <ValidationMessage For="@(() => expenseAdd.Amount)" />
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Reason</label>
+                            <label class="form-label">السبب</label>
                             <InputText class="form-control" @bind-Value="expenseAdd.Reason" />
                             <ValidationMessage For="@(() => expenseAdd.Reason)" />
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Created By</label>
+                            <label class="form-label">أُنشئ بواسطة</label>
                             <InputText class="form-control" @bind-Value="expenseAdd.CreatedBy" />
                             <ValidationMessage For="@(() => expenseAdd.CreatedBy)" />
                         </div>
 
                         <div class="text-end">
-                            <button type="button" class="btn btn-secondary me-2" @onclick="CloseAddExpenseModal">Cancel</button>
-                            <button type="submit" class="btn btn-success">Add</button>
+                            <button type="button" class="btn btn-secondary me-2" @onclick="CloseAddExpenseModal">إلغاء</button>
+                            <button type="submit" class="btn btn-success">إضافة</button>
                         </div>
                     </EditForm>
                 </div>
@@ -146,7 +146,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Delete Expense</h5>
+                    <h5 class="modal-title">حذف مصروف</h5>
                     <button class="btn-close" @onclick="CloseDeleteExpenseModal"></button>
                 </div>
                 <div class="modal-body">
@@ -155,14 +155,14 @@
                         <ValidationSummary />
 
                         <div class="mb-3">
-                            <label class="form-label">Password</label>
+                            <label class="form-label">كلمة المرور</label>
                             <input type="password" class="form-control" @bind="checkAccess.pass" />
                             <ValidationMessage For="@(() => checkAccess.pass)" />
                         </div>
 
                         <div class="text-end">
-                            <button type="button" class="btn btn-secondary me-2" @onclick="CloseDeleteExpenseModal">Cancel</button>
-                            <button type="submit" class="btn btn-danger">Delete</button>
+                            <button type="button" class="btn btn-secondary me-2" @onclick="CloseDeleteExpenseModal">إلغاء</button>
+                            <button type="submit" class="btn btn-danger">حذف</button>
                         </div>
                     </EditForm>
                 </div>
@@ -178,7 +178,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Edit Expense</h5>
+                    <h5 class="modal-title">تعديل مصروف</h5>
                     <button class="btn-close" @onclick="CloseEditExpenseModal"></button>
                 </div>
                 <div class="modal-body">

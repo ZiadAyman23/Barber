@@ -15,3 +15,8 @@ D:\cSharb\Barbershop\Infrastructer\obj\Debug\net10.0\refint\Infrastructer.dll
 D:\cSharb\Barbershop\Infrastructer\obj\Debug\net10.0\Infrastructer.pdb
 D:\cSharb\Barbershop\Infrastructer\obj\Debug\net10.0\Infrastructer.genruntimeconfig.cache
 D:\cSharb\Barbershop\Infrastructer\obj\Debug\net10.0\ref\Infrastructer.dll
+D:\cSharb\Barbershop\Infrastructer\obj\Debug\net10.0\Infrastructer.sourcelink.json
+C:\Users\Ziad\AppData\Local\Temp\barbershop-api-verify\Infrastructer.deps.json
+C:\Users\Ziad\AppData\Local\Temp\barbershop-api-verify\Infrastructer.runtimeconfig.json
+C:\Users\Ziad\AppData\Local\Temp\barbershop-api-verify\Infrastructer.dll
+C:\Users\Ziad\AppData\Local\Temp\barbershop-api-verify\Infrastructer.pdb

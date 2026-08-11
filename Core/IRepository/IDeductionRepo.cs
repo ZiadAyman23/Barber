@@ -12,6 +12,5 @@
         public Task<decimal> GetDeductionByBarberId(string barberId, DateTime date);
         public Task<List<Deductions>> GetAllDeductionByDateRange( GenralDuration duration);
 
-
     }
 }
