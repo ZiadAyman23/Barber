@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -66,6 +66,20 @@ namespace Barbershop.Controllers
             catch (Exception ex)
             {
                 return BadRequest($"{ex.Message}");
+            }
+        }
+
+        [HttpGet("getFilteredOrders")]
+        public async Task<IActionResult> GetFilteredOrders([FromQuery] string? barberId, [FromQuery] DateTime? date, [FromQuery] Pagenation pagenation)
+        {
+            try
+            {
+                var data = await orderService.GetFilteredOrdersAsync(barberId, date, pagenation);
+                return Ok(data);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
             }
         }
 

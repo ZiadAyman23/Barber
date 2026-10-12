@@ -345,7 +345,7 @@ window.printOrderReceipt = function (receipt) {
             .total{display:flex;justify-content:space-between;font-weight:700;font-size:16px;padding:4mm 0}.thanks{text-align:center;color:#64748b;font-size:12px;border-top:2px dashed #cbd5e1;padding-top:4mm}
             @media print{body{margin:0}.receipt{width:80mm;margin:0;padding:5mm}.no-print{display:none}}
         </style></head><body><main class="receipt"><header class="brand"><h1>كرافت باربرشوب</h1><span class="muted">فاتورة طلب</span></header>
-        <div class="meta"><div><strong>الحلاق:</strong> ${escapeHtml(receipt.barberName)}</div><div><strong>التاريخ:</strong> ${escapeHtml(receipt.date)}</div></div>
+        <div class="meta"><div><strong>الحلاق:</strong> ${escapeHtml(receipt.barberName)}</div>${receipt.clientName ? `<div><strong>العميل:</strong> ${escapeHtml(receipt.clientName)}</div>` : ''}<div><strong>التاريخ:</strong> ${escapeHtml(receipt.date)}</div></div>
         <table><thead><tr><th>الخدمة</th><th>السعر</th></tr></thead><tbody>${rows}</tbody></table>
         <div class="total"><span>الإجمالي</span><span>${money(receipt.total)}</span></div><p class="thanks">شكرًا لزيارتكم</p></main>
         <script>window.onload=()=>setTimeout(()=>window.print(),150);<\/script></body></html>`);

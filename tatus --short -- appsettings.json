@@ -1,0 +1,1134 @@
+warning: in the working copy of 'BarberFront/Components/Pages/Order.razor', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/BarberFront/Components/Layout/NavMenu.razor b/BarberFront/Components/Layout/NavMenu.razor[m
+[1mindex f67a89d..d8716d9 100644[m
+[1m--- a/BarberFront/Components/Layout/NavMenu.razor[m
+[1m+++ b/BarberFront/Components/Layout/NavMenu.razor[m
+[36m@@ -133,6 +133,17 @@[m
+                     </NavLink>[m
+                 </div>[m
+ [m
+[32m+[m[32m                <div class="nav-item">[m
+[32m+[m[32m                    <NavLink class="nav-link" href="account">[m
+[32m+[m[32m                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"[m
+[32m+[m[32m                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">[m
+[32m+[m[32m                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>[m
+[32m+[m[32m                            <circle cx="12" cy="7" r="4"/>[m
+[32m+[m[32m                        </svg>[m
+[32m+[m[32m                        <span>الحساب</span>[m
+[32m+[m[32m                    </NavLink>[m
+[32m+[m[32m                </div>[m
+[32m+[m
+                 <div class="nav-item nav-logout">[m
+                     <button type="button" class="nav-link" title="Sign out" @onclick="Logout" @onclick:stopPropagation="true">[m
+                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"[m
+[1mdiff --git a/BarberFront/Components/Pages/Home.razor b/BarberFront/Components/Pages/Home.razor[m
+[1mindex d3ffec3..d6f0904 100644[m
+[1m--- a/BarberFront/Components/Pages/Home.razor[m
+[1m+++ b/BarberFront/Components/Pages/Home.razor[m
+[36m@@ -91,6 +91,15 @@[m
+                     </div>[m
+                 </div>[m
+ [m
+[32m+[m[32m                <!-- Client Name -->[m
+[32m+[m[32m                <div class="form-row">[m
+[32m+[m[32m                    <label class="form-lbl">اسم العميل (اختياري)</label>[m
+[32m+[m[32m                    <input type="text"[m
+[32m+[m[32m                           class="form-sel"[m
+[32m+[m[32m                           placeholder="أدخل اسم العميل..."[m
+[32m+[m[32m                           @bind="clientName" />[m
+[32m+[m[32m                </div>[m
+[32m+[m
+                 <!-- Selected items -->[m
+                 <div class="form-row">[m
+                     <label class="form-lbl">الخدمات المختارة</label>[m
+[36m@@ -640,6 +649,7 @@[m
+     List<ItemMV> originalItems = new();[m
+     List<ItemMV> SelectedItem = new();[m
+     string id = string.Empty;[m
+[32m+[m[32m    string clientName = string.Empty;[m
+     decimal TotalPrice = 0;[m
+     bool isOrdering = false;[m
+     bool firstLoad = true;[m
+[36m@@ -699,6 +709,7 @@[m
+ [m
+         SelectedItem.Clear();[m
+         TotalPrice = 0;[m
+[32m+[m[32m        clientName = string.Empty;[m
+     }[m
+ [m
+     OrderD orderD = new();[m
+[36m@@ -713,6 +724,7 @@[m
+ [m
+             orderD.TotalPrice = TotalPrice;[m
+             orderD.BarberId = id;[m
+[32m+[m[32m            orderD.ClientName = string.IsNullOrWhiteSpace(clientName) ? null : clientName.Trim();[m
+             foreach (var item in SelectedItem)[m
+                 orderD.orderItemDs.Add(new OrderItemD { Name = item.Name, Price = item.Price });[m
+ [m
+[36m@@ -729,6 +741,7 @@[m
+             await JS.InvokeVoidAsync("printOrderReceipt", new[m
+             {[m
+                 barberName,[m
+[32m+[m[32m                clientName = orderD.ClientName,[m
+                 items = SelectedItem.Select(item => new { name = item.Name, price = item.Price }),[m
+                 total = TotalPrice,[m
+                 date = DateTime.Now.ToString("dd/MM/yyyy HH:mm")[m
+[36m@@ -738,6 +751,7 @@[m
+             orderD = new();[m
+             SelectedItem.Clear();[m
+             id = string.Empty;[m
+[32m+[m[32m            clientName = string.Empty;[m
+             TotalPrice = 0;[m
+             await JS.InvokeVoidAsync("showToast", respon.StatusMessage);[m
+         }[m
+[1mdiff --git a/BarberFront/Components/Pages/Order.razor b/BarberFront/Components/Pages/Order.razor[m
+[1mindex 455736b..67fee40 100644[m
+[1m--- a/BarberFront/Components/Pages/Order.razor[m
+[1m+++ b/BarberFront/Components/Pages/Order.razor[m
+[36m@@ -1,48 +1,74 @@[m
+ @page "/order"[m
+ @attribute [Authorize][m
+ @inject OrderService orderService[m
+[32m+[m[32m@inject BarberService barberService[m
+ @rendermode @(new InteractiveServerRenderMode(prerender: false))[m
+ @inject IJSRuntime JS[m
+ [m
+ <div class="container mt-4">[m
+ [m
+     <div class="row align-items-center mb-4">[m
+[31m-[m
+         <div class="col">[m
+[31m-[m
+             <h2 class="fw-bold text-dark d-flex align-items-center gap-2">[m
+                 <i class="bi bi-bag-check-fill text-primary"></i> إدارة الطلبات[m
+             </h2>[m
+[31m-[m
+             <p class="text-muted mb-0">[m
+[31m-                راجع وأدر طلبات الصالون.[m
+[32m+[m[32m                راجع وأدر طلبات الصالون، وفلتر بحسب الحلاق والتاريخ.[m
+             </p>[m
+[31m-[m
+         </div>[m
+ [m
+         <div class="col-auto">[m
+[31m-[m
+             <NavLink href="/" class="btn btn-success px-4 d-flex align-items-center gap-2">[m
+                 <i class="bi bi-plus-lg"></i> طلب جديد[m
+             </NavLink>[m
+[31m-[m
+         </div>[m
+[31m-[m
+     </div>[m
+ [m
+[31m-    <!-- Search Toolbar -->[m
+[32m+[m[32m    <!-- Filter / Search Toolbar -->[m
+     <div class="card p-3 mb-4 border-0 shadow-sm">[m
+         <div class="row align-items-center g-2">[m
+[31m-            <div class="col-md-4">[m
+[31m-                <InputDate @bind-Value="selectedDate"[m
+[31m-                           max="@DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd")"[m
+[31m-                           class="form-control" />[m
+[32m+[m[32m            <!-- Filter by Barber -->[m
+[32m+[m[32m            <div class="col-md-4 col-sm-6">[m
+[32m+[m[32m                <div class="input-group">[m
+[32m+[m[32m                    <span class="input-group-text bg-light text-muted">[m
+[32m+[m[32m                        <i class="bi bi-person-badge"></i>[m
+[32m+[m[32m                    </span>[m
+[32m+[m[32m                    <select class="form-select" @bind="selectedBarberId">[m
+[32m+[m[32m                        <option value="">كل الحلاقين</option>[m
+[32m+[m[32m                        @foreach (var b in barbers)[m
+[32m+[m[32m                        {[m
+[32m+[m[32m                            <option value="@b.Id">@b.Name</option>[m
+[32m+[m[32m                        }[m
+[32m+[m[32m                    </select>[m
+[32m+[m[32m                </div>[m
+[32m+[m[32m            </div>[m
+[32m+[m
+[32m+[m[32m            <!-- Filter by Date -->[m
+[32m+[m[32m            <div class="col-md-4 col-sm-6">[m
+[32m+[m[32m                <div class="input-group">[m
+[32m+[m[32m                    <span class="input-group-text bg-light text-muted">[m
+[32m+[m[32m                        <i class="bi bi-calendar3"></i>[m
+[32m+[m[32m                    </span>[m
+[32m+[m[32m                    <input type="date"[m
+[32m+[m[32m                           class="form-control"[m
+[32m+[m[32m                           value="@(useDateFilter && selectedDate.HasValue ? selectedDate.Value.ToString("yyyy-MM-dd") : "")"[m
+[32m+[m[32m                           @onchange="OnDateChanged"[m
+[32m+[m[32m                           max="@DateTime.Today.ToString("yyyy-MM-dd")" />[m
+[32m+[m[32m                    @if (useDateFilter)[m
+[32m+[m[32m                    {[m
+[32m+[m[32m                        <button class="btn btn-outline-secondary" type="button" title="مسح التاريخ" @onclick="ClearDateFilter">[m
+[32m+[m[32m                            <i class="bi bi-x-lg"></i>[m
+[32m+[m[32m                        </button>[m
+[32m+[m[32m                    }[m
+[32m+[m[32m                </div>[m
+             </div>[m
+[32m+[m
+[32m+[m[32m            <!-- Action buttons -->[m
+             <div class="col-auto d-flex gap-2">[m
+[31m-                <button class="btn btn-primary d-flex align-items-center gap-1" @onclick="SearchByDate">[m
+[31m-                    <i class="bi bi-search"></i> بحث[m
+[32m+[m[32m                <button class="btn btn-primary d-flex align-items-center gap-1 px-3" @onclick="ApplyFilter">[m
+[32m+[m[32m                    <i class="bi bi-funnel-fill"></i> تصفية[m
+                 </button>[m
+[31m-                <button class="btn btn-outline-secondary d-flex align-items-center gap-1" @onclick="LoadData">[m
+[32m+[m[32m                <button class="btn btn-outline-secondary d-flex align-items-center gap-1" @onclick="ResetFilter">[m
+                     <i class="bi bi-arrow-counterclockwise"></i> عرض الكل[m
+                 </button>[m
+             </div>[m
+[36m@@ -53,128 +79,189 @@[m
+ [m
+ <div class="container">[m
+     <div class="card border-0 shadow-sm overflow-hidden mb-4">[m
+[31m-        <table class="table mb-0 align-middle">[m
+[31m-            <thead>[m
+[31m-                <tr>[m
+[31m-                    <th scope="col">الحلاق</th>[m
+[31m-                    <th scope="col">التاريخ</th>[m
+[31m-                    <th scope="col">الإجمالي</th>[m
+[31m-                    <th scope="col" class="text-end">الإجراءات</th>[m
+[31m-                </tr>[m
+[31m-            </thead>[m
+[31m-            <tbody>[m
+[31m-                @foreach (var _item in orderMVs)[m
+[31m-                {[m
+[32m+[m[32m        <div class="table-responsive">[m
+[32m+[m[32m            <table class="table mb-0 align-middle">[m
+[32m+[m[32m                <thead class="table-light">[m
+                     <tr>[m
+[31m-                        <td class="fw-semibold text-dark">@_item.BarberName</td>[m
+[31m-                        <td class="text-muted">@_item.Date</td>[m
+[31m-                        <td><span class="badge bg-success-subtle text-success px-3 py-2 fs-6">@_item.TotalPrice.ToString("N2") EGP</span></td>[m
+[31m-                        <td class="text-end">[m
+[31m-                            <NavLink class="btn btn-sm btn-primary me-2" href="@($"/orderDetails/{_item.id}")">[m
+[31m-                                <i class="bi bi-eye me-1"></i> التفاصيل[m
+[31m-                            </NavLink>[m
+[31m-                            <button class="btn btn-sm btn-danger" @onclick="() => OpenRemove(_item.id)">[m
+[31m-                                <i class="bi bi-trash me-1"></i> حذف[m
+[31m-                            </button>[m
+[31m-                        </td>[m
+[32m+[m[32m                        <th scope="col">العميل</th>[m
+[32m+[m[32m                        <th scope="col">الحلاق</th>[m
+[32m+[m[32m                        <th scope="col">التاريخ</th>[m
+[32m+[m[32m                        <th scope="col">الإجمالي</th>[m
+[32m+[m[32m                        <th scope="col" class="text-end">الإجراءات</th>[m
+                     </tr>[m
+[31m-                }[m
+[31m-            </tbody>[m
+[31m-        </table>[m
+[32m+[m[32m                </thead>[m
+[32m+[m[32m                <tbody>[m
+[32m+[m[32m                    @if (orderMVs.Count == 0)[m
+[32m+[m[32m                    {[m
+[32m+[m[32m                        <tr>[m
+[32m+[m[32m                            <td colspan="5" class="text-center py-4 text-muted">[m
+[32m+[m[32m                                <i class="bi bi-inbox fs-3 d-block mb-1"></i>[m
+[32m+[m[32m                                لا توجد طلبات متطابقة مع البحث[m
+[32m+[m[32m                            </td>[m
+[32m+[m[32m                        </tr>[m
+[32m+[m[32m                    }[m
+[32m+[m[32m                    else[m
+[32m+[m[32m                    {[m
+[32m+[m[32m                        @foreach (var _item in orderMVs)[m
+[32m+[m[32m                        {[m
+[32m+[m[32m                            <tr>[m
+[32m+[m[32m                                <td>[m
+[32m+[m[32m                                    @if (!string.IsNullOrWhiteSpace(_item.ClientName))[m
+[32m+[m[32m                                    {[m
+[32m+[m[32m                                        <span class="fw-semibold text-dark d-flex align-items-center gap-1">[m
+[32m+[m[32m                                            <i class="bi bi-person text-primary"></i>[m
+[32m+[m[32m                                            @_item.ClientName[m
+[32m+[m[32m                                        </span>[m
+[32m+[m[32m                                    }[m
+[32m+[m[32m                                    else[m
+[32m+[m[32m                                    {[m
+[32m+[m[32m                                        <span class="text-muted fst-italic">غير محدد</span>[m
+[32m+[m[32m                                    }[m
+[32m+[m[32m                                </td>[m
+[32m+[m[32m                                <td class="fw-semibold text-dark">@_item.BarberName</td>[m
+[32m+[m[32m                                <td class="text-muted">@_item.Date.ToString("dd/MM/yyyy hh:mm tt")</td>[m
+[32m+[m[32m                                <td><span class="badge bg-success-subtle text-success px-3 py-2 fs-6">@_item.TotalPrice.ToString("N2") EGP</span></td>[m
+[32m+[m[32m                                <td class="text-end">[m
+[32m+[m[32m                                    <NavLink class="btn btn-sm btn-primary me-2" href="@($"/orderDetails/{_item.id}")">[m
+[32m+[m[32m                                        <i class="bi bi-eye me-1"></i> التفاصيل[m
+[32m+[m[32m                                    </NavLink>[m
+[32m+[m[32m                                    <button class="btn btn-sm btn-danger" @onclick="() => OpenRemove(_item.id)">[m
+[32m+[m[32m                                        <i class="bi bi-trash me-1"></i> حذف[m
+[32m+[m[32m                                    </button>[m
+[32m+[m[32m                                </td>[m
+[32m+[m[32m                            </tr>[m
+[32m+[m[32m                        }[m
+[32m+[m[32m                    }[m
+[32m+[m[32m                </tbody>[m
+[32m+[m[32m            </table>[m
+[32m+[m[32m        </div>[m
+     </div>[m
+ [m
+[31m-    @if (!hideNextButton)[m
+[32m+[m[32m    @if (!hideNextButton && orderMVs.Count > 0)[m
+     {[m
+[31m-        <div class="d-flex justify-content-center mb-4">[m
+[31m-            <button class="btn btn-outline-secondary me-2" @onclick="PreviousPage">Previous</button>[m
+[31m-            <button class="btn btn-outline-secondary" @onclick="NextPage">Next</button>[m
+[32m+[m[32m        <div class="d-flex justify-content-center align-items-center gap-2 mb-4">[m
+[32m+[m[32m            <button class="btn btn-outline-secondary px-3" @onclick="PreviousPage" disabled="@(pagenation.PageNumber <= 1)">[m
+[32m+[m[32m                <i class="bi bi-chevron-right"></i> السابق[m
+[32m+[m[32m            </button>[m
+[32m+[m[32m            <span class="badge bg-light text-dark border px-3 py-2">صفحة @pagenation.PageNumber</span>[m
+[32m+[m[32m            <button class="btn btn-outline-secondary px-3" @onclick="NextPage">[m
+[32m+[m[32m                التالي <i class="bi bi-chevron-left"></i>[m
+[32m+[m[32m            </button>[m
+         </div>[m
+     }[m
+ </div>[m
+ [m
+ @if (showRemove)[m
+ {[m
+[31m-    <div class="modal fade show d-block"[m
+[31m-         style="background-color:rgba(0,0,0,.5)">[m
+[31m-[m
+[32m+[m[32m    <div class="modal fade show d-block" style="background-color:rgba(0,0,0,.5)">[m
+         <div class="modal-dialog modal-dialog-centered">[m
+             <div class="modal-content">[m
+[31m-[m
+                 <div class="modal-header">[m
+[31m-                    <h5>حذف طلب</h5>[m
+[31m-                    <button class="btn-close"[m
+[31m-                            @onclick="closeRemove">[m
+[31m-                    </button>[m
+[32m+[m[32m                    <h5 class="modal-title">حذف طلب</h5>[m
+[32m+[m[32m                    <button class="btn-close" @onclick="closeRemove"></button>[m
+                 </div>[m
+ [m
+                 <div class="modal-body">[m
+[31m-[m
+                     <EditForm Model="@checkAccess" OnValidSubmit="RemoveOrder">[m
+[31m-[m
+                         <DataAnnotationsValidator />[m
+                         <ValidationSummary />[m
+ [m
+                         <div class="mb-3">[m
+[31m-                            <label class="form-label">[m
+[31m-                                Password[m
+[31m-                            </label>[m
+[31m-[m
+[31m-                            <input type="password" class="form-control"[m
+[31m-                                         @bind="checkAccess.pass" />[m
+[31m-[m
+[32m+[m[32m                            <label class="form-label">كلمة المرور التأكيدية</label>[m
+[32m+[m[32m                            <input type="password" class="form-control" @bind="checkAccess.pass" />[m
+                             <ValidationMessage For="@(() => checkAccess.pass)" />[m
+                         </div>[m
+ [m
+                         <div class="text-end">[m
+[31m-                            <button type="button"[m
+[31m-                                    class="btn btn-secondary me-2"[m
+[31m-                                    @onclick="closeRemove">[m
+[31m-                                Cancel[m
+[32m+[m[32m                            <button type="button" class="btn btn-secondary me-2" @onclick="closeRemove">[m
+[32m+[m[32m                                إلغاء[m
+                             </button>[m
+[31m-[m
+[31m-                            <button type="submit"[m
+[31m-                                    class="btn btn-danger">[m
+[31m-                                Delete[m
+[32m+[m[32m                            <button type="submit" class="btn btn-danger">[m
+[32m+[m[32m                                حذف[m
+                             </button>[m
+                         </div>[m
+[31m-[m
+                     </EditForm>[m
+[31m-[m
+                 </div>[m
+[31m-[m
+             </div>[m
+         </div>[m
+     </div>[m
+ }[m
+ [m
+[31m-[m
+ @code {[m
+[32m+[m[32m    string selectedBarberId = "";[m
+[32m+[m[32m    DateTime? selectedDate = null;[m
+[32m+[m[32m    bool useDateFilter = false;[m
+ [m
+[31m-    DateTime selectedDate = DateTime.UtcNow;[m
+[32m+[m[32m    List<BarberMV> barbers = new();[m
+     List<OrderMV> orderMVs = new();[m
+     Pagenation pagenation = new Pagenation { PageNumber = 1, PageSize = 10 };[m
+     bool hideNextButton = false;[m
+[32m+[m
+[32m+[m[32m    protected override async Task OnInitializedAsync()[m
+[32m+[m[32m    {[m
+[32m+[m[32m        barbers = await barberService.GetAllBarbers();[m
+[32m+[m[32m        await LoadData();[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    private void OnDateChanged(ChangeEventArgs e)[m
+[32m+[m[32m    {[m
+[32m+[m[32m        var str = e.Value?.ToString();[m
+[32m+[m[32m        if (DateTime.TryParse(str, out var dt))[m
+[32m+[m[32m        {[m
+[32m+[m[32m            selectedDate = dt;[m
+[32m+[m[32m            useDateFilter = true;[m
+[32m+[m[32m        }[m
+[32m+[m[32m        else[m
+[32m+[m[32m        {[m
+[32m+[m[32m            selectedDate = null;[m
+[32m+[m[32m            useDateFilter = false;[m
+[32m+[m[32m        }[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    private void ClearDateFilter()[m
+[32m+[m[32m    {[m
+[32m+[m[32m        selectedDate = null;[m
+[32m+[m[32m        useDateFilter = false;[m
+[32m+[m[32m    }[m
+[32m+[m
+     public async Task LoadData()[m
+     {[m
+[31m-        orderMVs = await orderService.GetAllOrder(pagenation);[m
+[31m-        hideNextButton = false;[m
+[32m+[m[32m        await JS.InvokeVoidAsync("showLoading");[m
+[32m+[m[32m        DateTime? dateParam = useDateFilter ? selectedDate : null;[m
+[32m+[m[32m        string? barberParam = string.IsNullOrWhiteSpace(selectedBarberId) ? null : selectedBarberId;[m
+ [m
+[32m+[m[32m        orderMVs = await orderService.GetFilteredOrders(barberParam, dateParam, pagenation);[m
+[32m+[m[32m        await JS.InvokeVoidAsync("hideLoading");[m
+[32m+[m[32m        hideNextButton = false;[m
+     }[m
+ [m
+[31m-    protected override async Task OnInitializedAsync()[m
+[32m+[m[32m    public async Task ApplyFilter()[m
+     {[m
+[32m+[m[32m        pagenation.PageNumber = 1;[m
+         await LoadData();[m
+[32m+[m[32m        if (orderMVs.Count == 0)[m
+[32m+[m[32m        {[m
+[32m+[m[32m            await JS.InvokeVoidAsync("showToast3", "لا توجد طلبات تطابق معايير الفلترة");[m
+[32m+[m[32m        }[m
+     }[m
+ [m
+[32m+[m[32m    public async Task ResetFilter()[m
+[32m+[m[32m    {[m
+[32m+[m[32m        selectedBarberId = "";[m
+[32m+[m[32m        selectedDate = null;[m
+[32m+[m[32m        useDateFilter = false;[m
+[32m+[m[32m        pagenation.PageNumber = 1;[m
+[32m+[m[32m        await LoadData();[m
+[32m+[m[32m    }[m
+ [m
+[31m-    string OrderId =string.Empty;[m
+[32m+[m[32m    string OrderId = string.Empty;[m
+     bool showRemove = false;[m
+     CheckAccess checkAccess = new CheckAccess();[m
+[32m+[m
+     public void OpenRemove(string id)[m
+     {[m
+         OrderId = id;[m
+         checkAccess = new CheckAccess();[m
+[31m-        Console.WriteLine(OrderId);[m
+         showRemove = true;[m
+     }[m
+ [m
+[36m@@ -192,32 +279,33 @@[m
+         showRemove = false;[m
+         await LoadData();[m
+ [m
+[31m-        if(!respons.Status)[m
+[32m+[m[32m        if (!respons.Status)[m
+         {[m
+[31m-            await JS.InvokeVoidAsync("showToast2",respons.StatusMessage);[m
+[32m+[m[32m            await JS.InvokeVoidAsync("showToast2", respons.StatusMessage);[m
+             return;[m
+         }[m
+[31m-        await JS.InvokeVoidAsync("showToast",respons.StatusMessage);[m
+[31m-[m
+[32m+[m[32m        await JS.InvokeVoidAsync("showToast", respons.StatusMessage);[m
+     }[m
+ [m
+[31m-[m
+     public async Task NextPage()[m
+     {[m
+         pagenation.PageNumber++;[m
+[31m-        await LoadData();[m
+[31m-        if (orderMVs.Count == 0)[m
+[32m+[m[32m        DateTime? dateParam = useDateFilter ? selectedDate : null;[m
+[32m+[m[32m        string? barberParam = string.IsNullOrWhiteSpace(selectedBarberId) ? null : selectedBarberId;[m
+[32m+[m[32m        var nextOrders = await orderService.GetFilteredOrders(barberParam, dateParam, pagenation);[m
+[32m+[m
+[32m+[m[32m        if (nextOrders.Count == 0)[m
+         {[m
+             pagenation.PageNumber--;[m
+[31m-            await LoadData();[m
+             await JS.InvokeVoidAsync("showToast3", "لا توجد المزيد من الطلبات");[m
+             return;[m
+         }[m
+[32m+[m[32m        orderMVs = nextOrders;[m
+     }[m
+ [m
+     public async Task PreviousPage()[m
+     {[m
+[31m-        if (pagenation.PageNumber == 1)[m
+[32m+[m[32m        if (pagenation.PageNumber <= 1)[m
+         {[m
+             await JS.InvokeVoidAsync("showToast3", "أنت بالفعل في الصفحة الأولى");[m
+             return;[m
+[36m@@ -226,19 +314,4 @@[m
+         pagenation.PageNumber--;[m
+         await LoadData();[m
+     }[m
+[31m-[m
+[31m-    public async Task SearchByDate()[m
+[31m-    {[m
+[31m-        await JS.InvokeVoidAsync("showLoading");[m
+[31m-        orderMVs = await orderService.GetOrdersByDate(selectedDate);[m
+[31m-        await JS.InvokeVoidAsync("hideLoading");[m
+[31m-[m
+[31m-        if (orderMVs.Count == 0)[m
+[31m-        {[m
+[31m-            await JS.InvokeVoidAsync("showToast3", "لا توجد طلبات لهذا التاريخ");[m
+[31m-            return;[m
+[31m-        }[m
+[31m-        hideNextButton = true;[m
+[31m-    }[m
+[31m-[m
+ }[m
+[1mdiff --git a/BarberFront/Components/Pages/OrderDetails.razor b/BarberFront/Components/Pages/OrderDetails.razor[m
+[1mindex 8d29883..62336e1 100644[m
+[1m--- a/BarberFront/Components/Pages/OrderDetails.razor[m
+[1m+++ b/BarberFront/Components/Pages/OrderDetails.razor[m
+[36m@@ -27,27 +27,35 @@[m
+ [m
+             <div class="row text-center mb-4">[m
+ [m
+[31m-                <div class="col-md-4">[m
+[31m-                    <div class="border rounded p-3">[m
+[32m+[m[32m                <div class="col-md-3 col-6 mb-3">[m
+[32m+[m[32m                    <div class="border rounded p-3 h-100 bg-light">[m
+[32m+[m[32m                        <i class="bi bi-person-circle fs-2 text-info"></i>[m
+[32m+[m[32m                        <h6 class="mt-2 mb-1 text-muted">العميل</h6>[m
+[32m+[m[32m                        <h5 class="fw-bold mb-0">@(string.IsNullOrWhiteSpace(orderMV.ClientName) ? "غير محدد" : orderMV.ClientName)</h5>[m
+[32m+[m[32m                    </div>[m
+[32m+[m[32m                </div>[m
+[32m+[m
+[32m+[m[32m                <div class="col-md-3 col-6 mb-3">[m
+[32m+[m[32m                    <div class="border rounded p-3 h-100 bg-light">[m
+                         <i class="bi bi-person-fill fs-2 text-primary"></i>[m
+[31m-                        <h6 class="mt-2 mb-1">الحلاق</h6>[m
+[31m-                        <h5>@orderMV.BarberName</h5>[m
+[32m+[m[32m                        <h6 class="mt-2 mb-1 text-muted">الحلاق</h6>[m
+[32m+[m[32m                        <h5 class="fw-bold mb-0">@orderMV.BarberName</h5>[m
+                     </div>[m
+                 </div>[m
+ [m
+[31m-                <div class="col-md-4">[m
+[31m-                    <div class="border rounded p-3">[m
+[32m+[m[32m                <div class="col-md-3 col-6 mb-3">[m
+[32m+[m[32m                    <div class="border rounded p-3 h-100 bg-light">[m
+                         <i class="bi bi-calendar-event fs-2 text-success"></i>[m
+[31m-                        <h6 class="mt-2 mb-1">التاريخ</h6>[m
+[31m-                        <h5>@orderMV.Date.ToString("dd/MM/yyyy")</h5>[m
+[32m+[m[32m                        <h6 class="mt-2 mb-1 text-muted">التاريخ</h6>[m
+[32m+[m[32m                        <h5 class="fw-bold mb-0">@orderMV.Date.ToString("dd/MM/yyyy")</h5>[m
+                     </div>[m
+                 </div>[m
+ [m
+[31m-                <div class="col-md-4">[m
+[31m-                    <div class="border rounded p-3">[m
+[32m+[m[32m                <div class="col-md-3 col-6 mb-3">[m
+[32m+[m[32m                    <div class="border rounded p-3 h-100 bg-light">[m
+                         <i class="bi bi-cash-stack fs-2 text-warning"></i>[m
+[31m-                        <h6 class="mt-2 mb-1">الإجمالي</h6>[m
+[31m-                        <h4 class="text-success">@orderMV.TotalPrice.ToString("F2") EGP</h4>[m
+[32m+[m[32m                        <h6 class="mt-2 mb-1 text-muted">الإجمالي</h6>[m
+[32m+[m[32m                        <h4 class="text-success fw-bold mb-0">@orderMV.TotalPrice.ToString("F2") EGP</h4>[m
+                     </div>[m
+                 </div>[m
+ [m
+[36m@@ -124,7 +132,15 @@[m
+                     <div class="modal-body">[m
+ [m
+                         <div class="mb-3">[m
+[31m-                            <label>الحلاق</label>[m
+[32m+[m[32m                            <label class="form-label fw-semibold">اسم العميل (اختياري)</label>[m
+[32m+[m[32m                            <input type="text"[m
+[32m+[m[32m                                   class="form-control"[m
+[32m+[m[32m                                   placeholder="أدخل اسم العميل..."[m
+[32m+[m[32m                                   @bind="order.ClientName" />[m
+[32m+[m[32m                        </div>[m
+[32m+[m
+[32m+[m[32m                        <div class="mb-3">[m
+[32m+[m[32m                            <label class="form-label fw-semibold">الحلاق</label>[m
+ [m
+                             <InputSelect class="form-select"[m
+                                          @bind-Value="order.BarberId">[m
+[36m@@ -267,6 +283,7 @@[m
+         await JS.InvokeVoidAsync("printOrderReceipt", new[m
+         {[m
+             barberName = orderMV.BarberName,[m
+[32m+[m[32m            clientName = orderMV.ClientName,[m
+             items = orderMV.Items.Select(item => new { name = item.name, price = item.price }),[m
+             total = orderMV.TotalPrice,[m
+             date = orderMV.Date.ToString("dd/MM/yyyy HH:mm")[m
+[36m@@ -282,6 +299,7 @@[m
+         showEditModal = true;[m
+         order.BarberId = orderMV.BarberId;[m
+         order.TotalPrice = orderMV.TotalPrice;[m
+[32m+[m[32m        order.ClientName = orderMV.ClientName;[m
+         foreach (var item in orderMV.Items)[m
+         {[m
+             order.orderItemDs.Add(new OrderItemD()[m
+[36m@@ -299,6 +317,7 @@[m
+         showEditModal = false;[m
+         showAddService = false;[m
+         order.orderItemDs.Clear();[m
+[32m+[m[32m        order.ClientName = null;[m
+         checkAccess = new CheckAccess();[m
+     }[m
+ [m
+[1mdiff --git a/BarberFront/Services/AccountService.cs b/BarberFront/Services/AccountService.cs[m
+[1mindex 7d9e810..b38efb1 100644[m
+[1m--- a/BarberFront/Services/AccountService.cs[m
+[1m+++ b/BarberFront/Services/AccountService.cs[m
+[36m@@ -35,5 +35,37 @@[m [mnamespace BarberFront.Services[m
+             var tokens = await respons.Content.ReadFromJsonAsync<Tokens>();[m
+             return tokens ?? new Tokens() ;[m
+         }[m
+[32m+[m
+[32m+[m[32m        public async Task<APIRespons> ChangePassword(ChangePassword changePassword)[m
+[32m+[m[32m        {[m
+[32m+[m[32m            var client = httpClientFactory.CreateClient("API");[m
+[32m+[m[32m            var response = await client.PutAsJsonAsync("api/Account/changePassword", changePassword);[m
+[32m+[m[32m            if (response.IsSuccessStatusCode)[m
+[32m+[m[32m            {[m
+[32m+[m[32m                return new APIRespons { Status = true, StatusMessage = "تم تغيير كلمة المرور بنجاح" };[m
+[32m+[m[32m            }[m
+[32m+[m
+[32m+[m[32m            var content = await response.Content.ReadAsStringAsync();[m
+[32m+[m[32m            string errorMessage = "";[m
+[32m+[m[32m            try[m
+[32m+[m[32m            {[m
+[32m+[m[32m                var doc = System.Text.Json.JsonDocument.Parse(content);[m
+[32m+[m[32m                if (doc.RootElement.TryGetProperty("message", out var msgElem))[m
+[32m+[m[32m                {[m
+[32m+[m[32m                    errorMessage = msgElem.GetString() ?? "";[m
+[32m+[m[32m                }[m
+[32m+[m[32m            }[m
+[32m+[m[32m            catch[m
+[32m+[m[32m            {[m
+[32m+[m[32m                errorMessage = content;[m
+[32m+[m[32m            }[m
+[32m+[m
+[32m+[m[32m            if (string.IsNullOrWhiteSpace(errorMessage))[m
+[32m+[m[32m            {[m
+[32m+[m[32m                errorMessage = "فشل تغيير كلمة المرور. يرجى التحقق من صحة كلمة المرور الحالية.";[m
+[32m+[m[32m            }[m
+[32m+[m
+[32m+[m[32m            return new APIRespons { Status = false, StatusMessage = errorMessage };[m
+[32m+[m[32m        }[m
+     }[m
+ }[m
+[1mdiff --git a/BarberFront/Services/OrderService.cs b/BarberFront/Services/OrderService.cs[m
+[1mindex f4f18b9..5eb49a7 100644[m
+[1m--- a/BarberFront/Services/OrderService.cs[m
+[1m+++ b/BarberFront/Services/OrderService.cs[m
+[36m@@ -127,15 +127,36 @@[m [mnamespace BarberFront.Services[m
+         public async Task<List<OrderMV>> GetOrdersByDate(DateTime date )[m
+         {[m
+             var client = httpClientFactory.CreateClient("API");[m
+[31m-            var respons = await client.GetAsync($"api/Order/getOrderByDate?date={date}");[m
+[32m+[m[32m            var respons = await client.GetAsync($"api/Order/getOrderByDate?date={date:yyyy-MM-dd}");[m
+             if (respons.IsSuccessStatusCode)[m
+             {[m
+[31m-                var data = respons.Content.ReadFromJsonAsync<List<OrderMV>>().Result;[m
+[31m-               [m
+[32m+[m[32m                var data = await respons.Content.ReadFromJsonAsync<List<OrderMV>>();[m
+                 return data ?? new List<OrderMV>();[m
+             }[m
+             else[m
+             { return new List<OrderMV>(); }[m
+         }[m
+[32m+[m
+[32m+[m[32m        public async Task<List<OrderMV>> GetFilteredOrders(string? barberId, DateTime? date, Pagenation pagenation)[m
+[32m+[m[32m        {[m
+[32m+[m[32m            var client = httpClientFactory.CreateClient("API");[m
+[32m+[m[32m            var url = $"api/Order/getFilteredOrders?PageNumber={pagenation.PageNumber}&PageSize={pagenation.PageSize}";[m
+[32m+[m[32m            if (!string.IsNullOrWhiteSpace(barberId))[m
+[32m+[m[32m            {[m
+[32m+[m[32m                url += $"&barberId={Uri.EscapeDataString(barberId)}";[m
+[32m+[m[32m            }[m
+[32m+[m[32m            if (date.HasValue)[m
+[32m+[m[32m            {[m
+[32m+[m[32m                url += $"&date={date.Value:yyyy-MM-dd}";[m
+[32m+[m[32m            }[m
+[32m+[m
+[32m+[m[32m            var respons = await client.GetAsync(url);[m
+[32m+[m[32m            if (respons.IsSuccessStatusCode)[m
+[32m+[m[32m            {[m
+[32m+[m[32m                var data = await respons.Content.ReadFromJsonAsync<List<OrderMV>>();[m
+[32m+[m[32m                return data ?? new List<OrderMV>();[m
+[32m+[m[32m            }[m
+[32m+[m[32m            return new List<OrderMV>();[m
+[32m+[m[32m        }[m
+     }[m
+ }[m
+[1mdiff --git a/BarberFront/wwwroot/JS/site.js b/BarberFront/wwwroot/JS/site.js[m
+[1mindex 9df994a..a16542e 100644[m
+[1m--- a/BarberFront/wwwroot/JS/site.js[m
+[1m+++ b/BarberFront/wwwroot/JS/site.js[m
+[36m@@ -345,7 +345,7 @@[m [mwindow.printOrderReceipt = function (receipt) {[m
+             .total{display:flex;justify-content:space-between;font-weight:700;font-size:16px;padding:4mm 0}.thanks{text-align:center;color:#64748b;font-size:12px;border-top:2px dashed #cbd5e1;padding-top:4mm}[m
+             @media print{body{margin:0}.receipt{width:80mm;margin:0;padding:5mm}.no-print{display:none}}[m
+         </style></head><body><main class="receipt"><header class="brand"><h1>كرافت باربرشوب</h1><span class="muted">فاتورة طلب</span></header>[m
+[31m-        <div class="meta"><div><strong>الحلاق:</strong> ${escapeHtml(receipt.barberName)}</div><div><strong>التاريخ:</strong> ${escapeHtml(receipt.date)}</div></div>[m
+[32m+[m[32m        <div class="meta"><div><strong>الحلاق:</strong> ${escapeHtml(receipt.barberName)}</div>${receipt.clientName ? `<div><strong>العميل:</strong> ${escapeHtml(receipt.clientName)}</div>` : ''}<div><strong>التاريخ:</strong> ${escapeHtml(receipt.date)}</div></div>[m
+         <table><thead><tr><th>الخدمة</th><th>السعر</th></tr></thead><tbody>${rows}</tbody></table>[m
+         <div class="total"><span>الإجمالي</span><span>${money(receipt.total)}</span></div><p class="thanks">شكرًا لزيارتكم</p></main>[m
+         <script>window.onload=()=>setTimeout(()=>window.print(),150);<\/script></body></html>`);[m
+[1mdiff --git a/Barbershop/Controllers/AccountController.cs b/Barbershop/Controllers/AccountController.cs[m
+[1mindex 8cb3d74..123a83c 100644[m
+[1m--- a/Barbershop/Controllers/AccountController.cs[m
+[1m+++ b/Barbershop/Controllers/AccountController.cs[m
+[36m@@ -1,4 +1,5 @@[m
+ using Microsoft.AspNetCore.Mvc;[m
+[32m+[m[32musing Microsoft.AspNetCore.RateLimiting;[m
+ [m
+ namespace Barbershop.Controllers[m
+ {[m
+[36m@@ -13,7 +14,7 @@[m [mnamespace Barbershop.Controllers[m
+         }[m
+ [m
+         [HttpPost("login")][m
+[31m-[m
+[32m+[m[32m        [EnableRateLimiting("Login")][m
+         public async Task<IActionResult> Login([FromBody] Login model)[m
+         {[m
+             try[m
+[36m@@ -74,5 +75,30 @@[m [mnamespace Barbershop.Controllers[m
+             { return BadRequest(e.Message); }[m
+         }[m
+ [m
+[32m+[m[32m        [Microsoft.AspNetCore.Authorization.Authorize][m
+[32m+[m[32m        [HttpPut("changePassword")][m
+[32m+[m[32m        public async Task<IActionResult> ChangePassword([FromBody] ChangePassword changePassword)[m
+[32m+[m[32m        {[m
+[32m+[m[32m            if(!ModelState.IsValid)[m
+[32m+[m[32m            {[m
+[32m+[m[32m                var errors = string.Join(" | ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));[m
+[32m+[m[32m                return BadRequest(new { message = errors });[m
+[32m+[m[32m            }[m
+[32m+[m
+[32m+[m[32m            try[m
+[32m+[m[32m            {[m
+[32m+[m[32m                await _appUserService.ChangePassword(changePassword);[m
+[32m+[m[32m                return Ok(new { message = "تم تغيير كلمة المرور بنجاح" });[m
+[32m+[m[32m            }[m
+[32m+[m[32m            catch (KeyNotFoundException ex)[m
+[32m+[m[32m            {[m
+[32m+[m[32m                return NotFound(new { message = ex.Message });[m
+[32m+[m[32m            }[m
+[32m+[m[32m            catch (Exception e)[m
+[32m+[m[32m            {[m
+[32m+[m[32m                return BadRequest(new { message = e.Message });[m
+[32m+[m[32m            }[m
+[32m+[m[32m        }[m
+[32m+[m
+     }[m
+ }[m
+[1mdiff --git a/Barbershop/Controllers/OrderController.cs b/Barbershop/Controllers/OrderController.cs[m
+[1mindex b46d5e5..67b12a1 100644[m
+[1m--- a/Barbershop/Controllers/OrderController.cs[m
+[1m+++ b/Barbershop/Controllers/OrderController.cs[m
+[36m@@ -1,4 +1,4 @@[m
+[31m-﻿using Microsoft.AspNetCore.Authorization;[m
+[32m+[m[32musing Microsoft.AspNetCore.Authorization;[m
+ using Microsoft.AspNetCore.Http;[m
+ using Microsoft.AspNetCore.Mvc;[m
+ [m
+[36m@@ -69,6 +69,20 @@[m [mnamespace Barbershop.Controllers[m
+             }[m
+         }[m
+ [m
+[32m+[m[32m        [HttpGet("getFilteredOrders")][m
+[32m+[m[32m        public async Task<IActionResult> GetFilteredOrders([FromQuery] string? barberId, [FromQuery] DateTime? date, [FromQuery] Pagenation pagenation)[m
+[32m+[m[32m        {[m
+[32m+[m[32m            try[m
+[32m+[m[32m            {[m
+[32m+[m[32m                var data = await orderService.GetFilteredOrdersAsync(barberId, date, pagenation);[m
+[32m+[m[32m                return Ok(data);[m
+[32m+[m[32m            }[m
+[32m+[m[32m            catch (Exception ex)[m
+[32m+[m[32m            {[m
+[32m+[m[32m                return BadRequest(ex.Message);[m
+[32m+[m[32m            }[m
+[32m+[m[32m        }[m
+[32m+[m
+         [HttpGet("getBarberOrders/{id}")][m
+         public async Task<IActionResult> GetBarberOrders([FromRoute] string id, [FromQuery] Pagenation pagenation)[m
+         {[m
+[1mdiff --git a/Barbershop/Program.cs b/Barbershop/Program.cs[m
+[1mindex 27d7bf5..2ca84d8 100644[m
+[1m--- a/Barbershop/Program.cs[m
+[1m+++ b/Barbershop/Program.cs[m
+[36m@@ -10,6 +10,7 @@[m [mglobal using Microsoft.AspNetCore.Identity;[m
+ global using Microsoft.EntityFrameworkCore;[m
+ global using Microsoft.IdentityModel.Tokens;[m
+ global using System.Text;[m
+[32m+[m[32musing Microsoft.AspNetCore.RateLimiting;[m
+ [m
+ namespace Barbershop[m
+ {[m
+[36m@@ -82,6 +83,17 @@[m [mnamespace Barbershop[m
+                 });[m
+             });[m
+ [m
+[32m+[m[32m            builder.Services.AddRateLimiter(options =>[m
+[32m+[m[32m            {[m
+[32m+[m[32m                options.AddSlidingWindowLimiter("Login", limiter =>[m
+[32m+[m[32m                {[m
+[32m+[m[32m                    limiter.PermitLimit = 5;[m
+[32m+[m[32m                    limiter.Window = TimeSpan.FromMinutes(5);[m
+[32m+[m[32m                    limiter.QueueLimit = 0;[m
+[32m+[m[32m                    limiter.SegmentsPerWindow = 10;[m
+[32m+[m[32m                });[m
+[32m+[m[41m                [m
+[32m+[m[32m            });[m
+             // Add services for dependency injection[m
+             builder.Services.AddScoped<IAppUserService, AppUserService>();[m
+             builder.Services.AddScoped<IItemService, ItemService>();[m
+[36m@@ -106,7 +118,7 @@[m [mnamespace Barbershop[m
+ [m
+             // Configure the HTTP request pipeline.[m
+ [m
+[31m-[m
+[32m+[m[32m            app.UseRateLimiter();[m
+             app.UseHttpsRedirection();[m
+             app.UseCors("AllowBlazor");[m
+             app.UseStaticFiles();[m
+[1mdiff --git a/Core/DTO/OrderD.cs b/Core/DTO/OrderD.cs[m
+[1mindex e7ac6c3..a8b2412 100644[m
+[1m--- a/Core/DTO/OrderD.cs[m
+[1m+++ b/Core/DTO/OrderD.cs[m
+[36m@@ -3,6 +3,7 @@[m
+     public class OrderD[m
+     {[m
+         public decimal TotalPrice { get; set; }[m
+[32m+[m[32m        public string? ClientName { get; set; }[m
+         public string BarberId { get; set; } = string.Empty;[m
+ [m
+         public List<OrderItemD> orderItemDs { get; set; } = new List<OrderItemD>();[m
+[1mdiff --git a/Core/IRepository/IOrderRepo.cs b/Core/IRepository/IOrderRepo.cs[m
+[1mindex d158df6..88d4fb0 100644[m
+[1m--- a/Core/IRepository/IOrderRepo.cs[m
+[1m+++ b/Core/IRepository/IOrderRepo.cs[m
+[36m@@ -1,4 +1,4 @@[m
+[31m-﻿namespace Core.IRepository[m
+[32m+[m[32mnamespace Core.IRepository[m
+ {[m
+     public interface IOrderRepo[m
+     {[m
+[36m@@ -13,6 +13,7 @@[m
+         public Task<List<Order>> GetOrderByDateRange( GenralDuration duration);[m
+         public Task<(decimal salary ,int Count)> GetMonthelyReport(DateTime start, DateTime end);[m
+         public Task<int> GetMonthelyBarberOrders(GenralDuration genral);[m
+[32m+[m[32m        public Task<List<Order>> GetFilteredOrders(string? barberId, DateTime? date, Pagenation pagenation);[m
+ [m
+ [m
+     }[m
+[1mdiff --git a/Core/IService/IAppUserService.cs b/Core/IService/IAppUserService.cs[m
+[1mindex 10e189e..884d9b7 100644[m
+[1m--- a/Core/IService/IAppUserService.cs[m
+[1m+++ b/Core/IService/IAppUserService.cs[m
+[36m@@ -6,5 +6,6 @@[m
+         Task<Tokens> RefreshToken(string refreshToken);[m
+         public Task CheckSecreatKey (CheckAccess secreatKey);[m
+         public Task Register(RegisterD registerD);[m
+[32m+[m[32m        public Task ChangePassword(ChangePassword changePassword);[m
+     }[m
+ }[m
+[1mdiff --git a/Core/IService/IOrderService.cs b/Core/IService/IOrderService.cs[m
+[1mindex d9ad766..484e54f 100644[m
+[1m--- a/Core/IService/IOrderService.cs[m
+[1m+++ b/Core/IService/IOrderService.cs[m
+[36m@@ -1,4 +1,4 @@[m
+[31m-﻿namespace Core.IService[m
+[32m+[m[32mnamespace Core.IService[m
+ {[m
+     public interface IOrderService[m
+     {[m
+[36m@@ -9,6 +9,7 @@[m
+         public Task AddOrderAsync(OrderD order);[m
+         public Task DeleteOrderAsync(string orderId);[m
+         public Task UpdateOrderAsync(OrderD order, string id);[m
+[32m+[m[32m        public Task<List<OrderMV>> GetFilteredOrdersAsync(string? barberId, DateTime? date, Pagenation pagenation);[m
+ [m
+     }[m
+ }[m
+[1mdiff --git a/Core/ModelView/OrderMV.cs b/Core/ModelView/OrderMV.cs[m
+[1mindex 7847008..b5584ff 100644[m
+[1m--- a/Core/ModelView/OrderMV.cs[m
+[1m+++ b/Core/ModelView/OrderMV.cs[m
+[36m@@ -5,6 +5,7 @@[m
+         public string id { get; set; } = string.Empty;[m
+         public DateTime Date { get; set; }[m
+         public decimal TotalPrice { get; set; }[m
+[32m+[m[32m        public string? ClientName { get; set; }[m
+         public string BarberName { get; set; } = string.Empty;[m
+         public string BarberId { get; set; } = string.Empty;[m
+         public List<ItemOrderMV> Items { get; set; } = new List<ItemOrderMV>();[m
+[1mdiff --git a/Core/Models/Order.cs b/Core/Models/Order.cs[m
+[1mindex ec39054..547d908 100644[m
+[1m--- a/Core/Models/Order.cs[m
+[1m+++ b/Core/Models/Order.cs[m
+[36m@@ -5,6 +5,7 @@[m
+         public string Id { get; set; } = Guid.NewGuid().ToString();[m
+         public DateTime Date { get; set; }[m
+         public decimal TotalPrice { get; set; } = 0;[m
+[32m+[m[32m        public string? ClientName { get; set; } = string.Empty;[m
+         public string BarberId { get; set; } = string.Empty;[m
+         public Barber? Barber { get; set; }[m
+         public List<ItemOrder> Items { get; set; } = new List<ItemOrder>();[m
+[1mdiff --git a/Infrastructer/Confegrations/OrderConf.cs b/Infrastructer/Confegrations/OrderConf.cs[m
+[1mindex ba3c4cd..8ce3c39 100644[m
+[1m--- a/Infrastructer/Confegrations/OrderConf.cs[m
+[1m+++ b/Infrastructer/Confegrations/OrderConf.cs[m
+[36m@@ -8,6 +8,7 @@[m
+             builder.HasKey(t => t.Id);[m
+             builder.HasIndex(x => new { x.BarberId, x.Date });[m
+             builder.Property(x => x.TotalPrice).IsRequired(true);[m
+[32m+[m[32m            builder.Property(x=>x.ClientName).IsRequired(false);[m
+             builder.Property(x => x.Date).IsRequired(true).HasDefaultValueSql("GETDATE()");[m
+             builder.HasOne(x => x.Barber).WithMany(x => x.Orders).HasForeignKey(x => x.BarberId).OnDelete(DeleteBehavior.NoAction);[m
+         }[m
+[1mdiff --git a/Infrastructer/Migrations/DataContextModelSnapshot.cs b/Infrastructer/Migrations/DataContextModelSnapshot.cs[m
+[1mindex 74045ad..2f4e41f 100644[m
+[1m--- a/Infrastructer/Migrations/DataContextModelSnapshot.cs[m
+[1m+++ b/Infrastructer/Migrations/DataContextModelSnapshot.cs[m
+[36m@@ -274,6 +274,9 @@[m [mnamespace Infrastructer.Migrations[m
+                         .IsRequired()[m
+                         .HasColumnType("nvarchar(450)");[m
+ [m
+[32m+[m[32m                    b.Property<string>("ClientName")[m
+[32m+[m[32m                        .HasColumnType("nvarchar(max)");[m
+[32m+[m
+                     b.Property<DateTime>("Date")[m
+                         .ValueGeneratedOnAdd()[m
+                         .HasColumnType("datetime2")[m
+[1mdiff --git a/Infrastructer/Repository/OrderRepo.cs b/Infrastructer/Repository/OrderRepo.cs[m
+[1mindex 857d615..862f290 100644[m
+[1m--- a/Infrastructer/Repository/OrderRepo.cs[m
+[1m+++ b/Infrastructer/Repository/OrderRepo.cs[m
+[36m@@ -80,6 +80,7 @@[m [mnamespace Infrastructer.Repository[m
+         async Task<List<Order>> IOrderRepo.GetAllBarberOrders(string BarberID, Pagenation pagenation)[m
+         {[m
+             var data = await dataContext.Orders[m
+[32m+[m[32m                .Include(e => e.Barber)[m
+                 .Where(e => e.BarberId == BarberID)[m
+                 .OrderByDescending(e => e.Date)[m
+                 .Skip((pagenation.PageNumber - 1) * pagenation.PageSize)[m
+[36m@@ -101,6 +102,31 @@[m [mnamespace Infrastructer.Repository[m
+             return data;[m
+         }[m
+ [m
+[32m+[m[32m        async Task<List<Order>> IOrderRepo.GetFilteredOrders(string? barberId, DateTime? date, Pagenation pagenation)[m
+[32m+[m[32m        {[m
+[32m+[m[32m            var query = dataContext.Orders.Include(e => e.Barber).AsNoTracking().AsQueryable();[m
+[32m+[m
+[32m+[m[32m            if (!string.IsNullOrWhiteSpace(barberId))[m
+[32m+[m[32m            {[m
+[32m+[m[32m                query = query.Where(e => e.BarberId == barberId);[m
+[32m+[m[32m            }[m
+[32m+[m
+[32m+[m[32m            if (date.HasValue)[m
+[32m+[m[32m            {[m
+[32m+[m[32m                var start = date.Value.Date;[m
+[32m+[m[32m                var end = start.AddDays(1);[m
+[32m+[m[32m                query = query.Where(e => e.Date >= start && e.Date < end);[m
+[32m+[m[32m            }[m
+[32m+[m
+[32m+[m[32m            var data = await query[m
+[32m+[m[32m                .OrderByDescending(e => e.Date)[m
+[32m+[m[32m                .Skip((pagenation.PageNumber - 1) * pagenation.PageSize)[m
+[32m+[m[32m                .Take(pagenation.PageSize)[m
+[32m+[m[32m                .ToListAsync();[m
+[32m+[m
+[32m+[m[32m            return data;[m
+[32m+[m[32m        }[m
+[32m+[m
+         async Task<Order> IOrderRepo.GetOrderById(string id)[m
+         {[m
+             var data =await dataContext.Orders.Include(e=>e.Items).Include(e=>e.Barber).AsNoTracking().FirstOrDefaultAsync(e => e.Id== id);[m
+[36m@@ -112,8 +138,16 @@[m [mnamespace Infrastructer.Repository[m
+ [m
+         async Task IOrderRepo.UpdateOrder(Order order)[m
+         {[m
+[31m-[m
+[31m-           dataContext.Orders.Update(order);[m
+[32m+[m[32m            var existingItems = await dataContext.ItemsOrders.Where(x => x.OrderId == order.Id).ToListAsync();[m
+[32m+[m[32m            if (existingItems.Count != 0)[m
+[32m+[m[32m            {[m
+[32m+[m[32m                dataContext.ItemsOrders.RemoveRange(existingItems);[m
+[32m+[m[32m            }[m
+[32m+[m[32m            foreach (var item in order.Items)[m
+[32m+[m[32m            {[m
+[32m+[m[32m                item.OrderId = order.Id;[m
+[32m+[m[32m            }[m
+[32m+[m[32m            dataContext.Orders.Update(order);[m
+             await dataContext.SaveChangesAsync();[m
+         }[m
+     }[m
+[1mdiff --git a/Infrastructer/Service/AppUserService.cs b/Infrastructer/Service/AppUserService.cs[m
+[1mindex 6a557f6..474bc9f 100644[m
+[1m--- a/Infrastructer/Service/AppUserService.cs[m
+[1m+++ b/Infrastructer/Service/AppUserService.cs[m
+[36m@@ -142,6 +142,12 @@[m [mnamespace Infrastructer.Service[m
+ [m
+         public async Task Register(RegisterD registerD)[m
+         {[m
+[32m+[m[41m            [m
+[32m+[m[32m            var accountCount = await _userManager.Users.CountAsync();[m
+[32m+[m[41m            [m
+[32m+[m[32m            if (accountCount >1)[m
+[32m+[m[32m                throw new Exception("Account count is greater than 1");[m
+[32m+[m[41m            [m
+             AppUser appUser = new AppUser[m
+             {[m
+                 UserName = registerD.UserName,[m
+[36m@@ -156,5 +162,34 @@[m [mnamespace Infrastructer.Service[m
+             }[m
+ [m
+         }[m
+[32m+[m
+[32m+[m[32m        public async Task ChangePassword(ChangePassword changePassword)[m
+[32m+[m[32m        {[m
+[32m+[m[32m            var principal = httpContextAccessor.HttpContext?.User;[m
+[32m+[m[32m            if (principal == null)[m
+[32m+[m[32m                throw new KeyNotFoundException("المستخدم غير مسجل");[m
+[32m+[m
+[32m+[m[32m            var userId = principal.FindFirstValue(ClaimTypes.NameIdentifier);[m
+[32m+[m[32m            var user = !string.IsNullOrEmpty(userId)[m
+[32m+[m[32m                ? await _userManager.FindByIdAsync(userId)[m
+[32m+[m[32m                : await _userManager.GetUserAsync(principal);[m
+[32m+[m
+[32m+[m[32m            if (user == null)[m
+[32m+[m[32m            {[m
+[32m+[m[32m                var username = principal.Identity?.Name;[m
+[32m+[m[32m                if (!string.IsNullOrEmpty(username))[m
+[32m+[m[32m                    user = await _userManager.FindByNameAsync(username);[m
+[32m+[m[32m            }[m
+[32m+[m
+[32m+[m[32m            if (user == null)[m
+[32m+[m[32m                throw new KeyNotFoundException("تعذر العثور على حساب المستخدم");[m
+[32m+[m
+[32m+[m[32m            var result = await _userManager.ChangePasswordAsync(user, changePassword.OldPassword, changePassword.NewPassword);[m
+[32m+[m[32m            if (!result.Succeeded)[m
+[32m+[m[32m            {[m
+[32m+[m[32m                var errors = string.Join(" | ", result.Errors.Select(e => e.Description));[m
+[32m+[m[32m                throw new Exception(errors);[m
+[32m+[m[32m            }[m
+[32m+[m[32m        }[m
+     }[m
+ }[m
+[1mdiff --git a/Infrastructer/Service/OrderService.cs b/Infrastructer/Service/OrderService.cs[m
+[1mindex ea3d164..9fe4064 100644[m
+[1m--- a/Infrastructer/Service/OrderService.cs[m
+[1m+++ b/Infrastructer/Service/OrderService.cs[m
+[36m@@ -1,4 +1,4 @@[m
+[31m-﻿using System;[m
+[32m+[m[32musing System;[m
+ using System.Collections.Generic;[m
+ using System.Text;[m
+ [m
+[36m@@ -25,6 +25,7 @@[m [mnamespace Infrastructer.Service[m
+                     id = item.Id,[m
+                     TotalPrice = item.TotalPrice,[m
+                     Date = item.Date,[m
+[32m+[m[32m                    ClientName = item.ClientName,[m
+                 });[m
+             }[m
+             [m
+[36m@@ -36,6 +37,7 @@[m [mnamespace Infrastructer.Service[m
+            Order order1 = new Order();[m
+             order1.BarberId = order.BarberId;[m
+             order1.TotalPrice = order.TotalPrice;[m
+[32m+[m[32m            order1.ClientName = order.ClientName;[m
+    [m
+             foreach (var item in order.orderItemDs)[m
+             {[m
+[36m@@ -63,6 +65,9 @@[m [mnamespace Infrastructer.Service[m
+                     id = item.Id,[m
+                     TotalPrice = item.TotalPrice,[m
+                     Date=item.Date,[m
+[32m+[m[32m                    ClientName = item.ClientName,[m[41m   [m
+[32m+[m[32m                    BarberName = item.Barber?.Name ?? "",[m
+[32m+[m[32m                    BarberId = item.BarberId,[m
+                 });[m
+             }[m
+             return result;[m
+[36m@@ -77,16 +82,37 @@[m [mnamespace Infrastructer.Service[m
+             {[m
+                 result.Add(new OrderMV[m
+                 {[m
+[31m-                    BarberName = item.Barber.Name,[m
+[32m+[m[32m                    BarberName = item.Barber?.Name ?? "",[m
+[32m+[m[32m                    BarberId = item.BarberId,[m
+                     id = item.Id,[m
+                     TotalPrice = item.TotalPrice,[m
+                     Date = item.Date,[m
+[32m+[m[32m                    ClientName = item.ClientName,[m
+                 });[m
+             }[m
+             return result;[m
+ [m
+         }[m
+ [m
+[32m+[m[32m        async Task<List<OrderMV>> IOrderService.GetFilteredOrdersAsync(string? barberId, DateTime? date, Pagenation pagenation)[m
+[32m+[m[32m        {[m
+[32m+[m[32m            var orders = await orderRepo.GetFilteredOrders(barberId, date, pagenation);[m
+[32m+[m[32m            List<OrderMV> result = new List<OrderMV>();[m
+[32m+[m[32m            foreach (var item in orders)[m
+[32m+[m[32m            {[m
+[32m+[m[32m                result.Add(new OrderMV[m
+[32m+[m[32m                {[m
+[32m+[m[32m                    BarberName = item.Barber?.Name ?? "",[m
+[32m+[m[32m                    BarberId = item.BarberId,[m
+[32m+[m[32m                    id = item.Id,[m
+[32m+[m[32m                    TotalPrice = item.TotalPrice,[m
+[32m+[m[32m                    Date = item.Date,[m
+[32m+[m[32m                    ClientName = item.ClientName,[m
+[32m+[m[32m                });[m
+[32m+[m[32m            }[m
+[32m+[m[32m            return result;[m
+[32m+[m[32m        }[m
+[32m+[m
+         async Task<OrderMV> IOrderService.GetOrderAsync(string orderId)[m
+         {[m
+             var order = await orderRepo.GetOrderById(orderId);[m
+[36m@@ -110,6 +136,7 @@[m [mnamespace Infrastructer.Service[m
+                 id = order.Id,[m
+                 TotalPrice = order.TotalPrice,[m
+                 Date = order.Date,[m
+[32m+[m[32m                ClientName = order.ClientName,[m
+                 Items = itemOrderMVs[m
+             };[m
+ [m
+[36m@@ -130,15 +157,14 @@[m [mnamespace Infrastructer.Service[m
+                 {[m
+                     Price = item.Price,[m
+                     Name = item.Name,[m
+[32m+[m[41m                    [m
+                 });[m
+             }[m
+[31m-[m
+[31m-[m
+[32m+[m[41m            [m
+             _order.TotalPrice=order.TotalPrice;[m
+             _order.BarberId = order.BarberId;[m
+             _order.Items = itemOrder;[m
+[31m-[m
+[31m-[m
+[32m+[m[32m            _order.ClientName  = order.ClientName;[m
+             [m
+             await orderRepo.UpdateOrder(_order);[m
+             [m

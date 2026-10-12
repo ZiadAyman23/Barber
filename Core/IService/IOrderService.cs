@@ -1,4 +1,4 @@
-﻿namespace Core.IService
+namespace Core.IService
 {
     public interface IOrderService
     {
@@ -9,6 +9,7 @@
         public Task AddOrderAsync(OrderD order);
         public Task DeleteOrderAsync(string orderId);
         public Task UpdateOrderAsync(OrderD order, string id);
+        public Task<List<OrderMV>> GetFilteredOrdersAsync(string? barberId, DateTime? date, Pagenation pagenation);
 
     }
 }

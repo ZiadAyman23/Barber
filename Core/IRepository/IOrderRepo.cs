@@ -1,4 +1,4 @@
-﻿namespace Core.IRepository
+namespace Core.IRepository
 {
     public interface IOrderRepo
     {
@@ -13,6 +13,7 @@
         public Task<List<Order>> GetOrderByDateRange( GenralDuration duration);
         public Task<(decimal salary ,int Count)> GetMonthelyReport(DateTime start, DateTime end);
         public Task<int> GetMonthelyBarberOrders(GenralDuration genral);
+        public Task<List<Order>> GetFilteredOrders(string? barberId, DateTime? date, Pagenation pagenation);
 
 
     }

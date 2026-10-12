@@ -91,6 +91,15 @@
                     </div>
                 </div>
 
+                <!-- Client Name -->
+                <div class="form-row">
+                    <label class="form-lbl">اسم العميل (اختياري)</label>
+                    <input type="text"
+                           class="form-sel"
+                           placeholder="أدخل اسم العميل..."
+                           @bind="clientName" />
+                </div>
+
                 <!-- Selected items -->
                 <div class="form-row">
                     <label class="form-lbl">الخدمات المختارة</label>
@@ -640,6 +649,7 @@
     List<ItemMV> originalItems = new();
     List<ItemMV> SelectedItem = new();
     string id = string.Empty;
+    string clientName = string.Empty;
     decimal TotalPrice = 0;
     bool isOrdering = false;
     bool firstLoad = true;
@@ -699,6 +709,7 @@
 
         SelectedItem.Clear();
         TotalPrice = 0;
+        clientName = string.Empty;
     }
 
     OrderD orderD = new();
@@ -713,6 +724,7 @@
 
             orderD.TotalPrice = TotalPrice;
             orderD.BarberId = id;
+            orderD.ClientName = string.IsNullOrWhiteSpace(clientName) ? null : clientName.Trim();
             foreach (var item in SelectedItem)
                 orderD.orderItemDs.Add(new OrderItemD { Name = item.Name, Price = item.Price });
 
@@ -729,6 +741,7 @@
             await JS.InvokeVoidAsync("printOrderReceipt", new
             {
                 barberName,
+                clientName = orderD.ClientName,
                 items = SelectedItem.Select(item => new { name = item.Name, price = item.Price }),
                 total = TotalPrice,
                 date = DateTime.Now.ToString("dd/MM/yyyy HH:mm")
@@ -738,6 +751,7 @@
             orderD = new();
             SelectedItem.Clear();
             id = string.Empty;
+            clientName = string.Empty;
             TotalPrice = 0;
             await JS.InvokeVoidAsync("showToast", respon.StatusMessage);
         }

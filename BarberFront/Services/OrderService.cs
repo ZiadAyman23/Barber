@@ -127,15 +127,36 @@ namespace BarberFront.Services
         public async Task<List<OrderMV>> GetOrdersByDate(DateTime date )
         {
             var client = httpClientFactory.CreateClient("API");
-            var respons = await client.GetAsync($"api/Order/getOrderByDate?date={date}");
+            var respons = await client.GetAsync($"api/Order/getOrderByDate?date={date:yyyy-MM-dd}");
             if (respons.IsSuccessStatusCode)
             {
-                var data = respons.Content.ReadFromJsonAsync<List<OrderMV>>().Result;
-               
+                var data = await respons.Content.ReadFromJsonAsync<List<OrderMV>>();
                 return data ?? new List<OrderMV>();
             }
             else
             { return new List<OrderMV>(); }
+        }
+
+        public async Task<List<OrderMV>> GetFilteredOrders(string? barberId, DateTime? date, Pagenation pagenation)
+        {
+            var client = httpClientFactory.CreateClient("API");
+            var url = $"api/Order/getFilteredOrders?PageNumber={pagenation.PageNumber}&PageSize={pagenation.PageSize}";
+            if (!string.IsNullOrWhiteSpace(barberId))
+            {
+                url += $"&barberId={Uri.EscapeDataString(barberId)}";
+            }
+            if (date.HasValue)
+            {
+                url += $"&date={date.Value:yyyy-MM-dd}";
+            }
+
+            var respons = await client.GetAsync(url);
+            if (respons.IsSuccessStatusCode)
+            {
+                var data = await respons.Content.ReadFromJsonAsync<List<OrderMV>>();
+                return data ?? new List<OrderMV>();
+            }
+            return new List<OrderMV>();
         }
     }
 }

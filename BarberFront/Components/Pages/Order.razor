@@ -1,48 +1,74 @@
 @page "/order"
 @attribute [Authorize]
 @inject OrderService orderService
+@inject BarberService barberService
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 @inject IJSRuntime JS
 
 <div class="container mt-4">
 
     <div class="row align-items-center mb-4">
-
         <div class="col">
-
             <h2 class="fw-bold text-dark d-flex align-items-center gap-2">
                 <i class="bi bi-bag-check-fill text-primary"></i> إدارة الطلبات
             </h2>
-
             <p class="text-muted mb-0">
-                راجع وأدر طلبات الصالون.
+                راجع وأدر طلبات الصالون، وفلتر بحسب الحلاق والتاريخ.
             </p>
-
         </div>
 
         <div class="col-auto">
-
             <NavLink href="/" class="btn btn-success px-4 d-flex align-items-center gap-2">
                 <i class="bi bi-plus-lg"></i> طلب جديد
             </NavLink>
-
         </div>
-
     </div>
 
-    <!-- Search Toolbar -->
+    <!-- Filter / Search Toolbar -->
     <div class="card p-3 mb-4 border-0 shadow-sm">
         <div class="row align-items-center g-2">
-            <div class="col-md-4">
-                <InputDate @bind-Value="selectedDate"
-                           max="@DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd")"
-                           class="form-control" />
+            <!-- Filter by Barber -->
+            <div class="col-md-4 col-sm-6">
+                <div class="input-group">
+                    <span class="input-group-text bg-light text-muted">
+                        <i class="bi bi-person-badge"></i>
+                    </span>
+                    <select class="form-select" @bind="selectedBarberId">
+                        <option value="">كل الحلاقين</option>
+                        @foreach (var b in barbers)
+                        {
+                            <option value="@b.Id">@b.Name</option>
+                        }
+                    </select>
+                </div>
             </div>
+
+            <!-- Filter by Date -->
+            <div class="col-md-4 col-sm-6">
+                <div class="input-group">
+                    <span class="input-group-text bg-light text-muted">
+                        <i class="bi bi-calendar3"></i>
+                    </span>
+                    <input type="date"
+                           class="form-control"
+                           value="@(useDateFilter && selectedDate.HasValue ? selectedDate.Value.ToString("yyyy-MM-dd") : "")"
+                           @onchange="OnDateChanged"
+                           max="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                    @if (useDateFilter)
+                    {
+                        <button class="btn btn-outline-secondary" type="button" title="مسح التاريخ" @onclick="ClearDateFilter">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    }
+                </div>
+            </div>
+
+            <!-- Action buttons -->
             <div class="col-auto d-flex gap-2">
-                <button class="btn btn-primary d-flex align-items-center gap-1" @onclick="SearchByDate">
-                    <i class="bi bi-search"></i> بحث
+                <button class="btn btn-primary d-flex align-items-center gap-1 px-3" @onclick="ApplyFilter">
+                    <i class="bi bi-funnel-fill"></i> تصفية
                 </button>
-                <button class="btn btn-outline-secondary d-flex align-items-center gap-1" @onclick="LoadData">
+                <button class="btn btn-outline-secondary d-flex align-items-center gap-1" @onclick="ResetFilter">
                     <i class="bi bi-arrow-counterclockwise"></i> عرض الكل
                 </button>
             </div>
@@ -53,128 +79,189 @@
 
 <div class="container">
     <div class="card border-0 shadow-sm overflow-hidden mb-4">
-        <table class="table mb-0 align-middle">
-            <thead>
-                <tr>
-                    <th scope="col">الحلاق</th>
-                    <th scope="col">التاريخ</th>
-                    <th scope="col">الإجمالي</th>
-                    <th scope="col" class="text-end">الإجراءات</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var _item in orderMVs)
-                {
+        <div class="table-responsive">
+            <table class="table mb-0 align-middle">
+                <thead class="table-light">
                     <tr>
-                        <td class="fw-semibold text-dark">@_item.BarberName</td>
-                        <td class="text-muted">@_item.Date</td>
-                        <td><span class="badge bg-success-subtle text-success px-3 py-2 fs-6">@_item.TotalPrice.ToString("N2") EGP</span></td>
-                        <td class="text-end">
-                            <NavLink class="btn btn-sm btn-primary me-2" href="@($"/orderDetails/{_item.id}")">
-                                <i class="bi bi-eye me-1"></i> التفاصيل
-                            </NavLink>
-                            <button class="btn btn-sm btn-danger" @onclick="() => OpenRemove(_item.id)">
-                                <i class="bi bi-trash me-1"></i> حذف
-                            </button>
-                        </td>
+                        <th scope="col">العميل</th>
+                        <th scope="col">الحلاق</th>
+                        <th scope="col">التاريخ</th>
+                        <th scope="col">الإجمالي</th>
+                        <th scope="col" class="text-end">الإجراءات</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @if (orderMVs.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">
+                                <i class="bi bi-inbox fs-3 d-block mb-1"></i>
+                                لا توجد طلبات متطابقة مع البحث
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var _item in orderMVs)
+                        {
+                            <tr>
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(_item.ClientName))
+                                    {
+                                        <span class="fw-semibold text-dark d-flex align-items-center gap-1">
+                                            <i class="bi bi-person text-primary"></i>
+                                            @_item.ClientName
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted fst-italic">غير محدد</span>
+                                    }
+                                </td>
+                                <td class="fw-semibold text-dark">@_item.BarberName</td>
+                                <td class="text-muted">@_item.Date.ToString("dd/MM/yyyy hh:mm tt")</td>
+                                <td><span class="badge bg-success-subtle text-success px-3 py-2 fs-6">@_item.TotalPrice.ToString("N2") EGP</span></td>
+                                <td class="text-end">
+                                    <NavLink class="btn btn-sm btn-primary me-2" href="@($"/orderDetails/{_item.id}")">
+                                        <i class="bi bi-eye me-1"></i> التفاصيل
+                                    </NavLink>
+                                    <button class="btn btn-sm btn-danger" @onclick="() => OpenRemove(_item.id)">
+                                        <i class="bi bi-trash me-1"></i> حذف
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
 
-    @if (!hideNextButton)
+    @if (!hideNextButton && orderMVs.Count > 0)
     {
-        <div class="d-flex justify-content-center mb-4">
-            <button class="btn btn-outline-secondary me-2" @onclick="PreviousPage">Previous</button>
-            <button class="btn btn-outline-secondary" @onclick="NextPage">Next</button>
+        <div class="d-flex justify-content-center align-items-center gap-2 mb-4">
+            <button class="btn btn-outline-secondary px-3" @onclick="PreviousPage" disabled="@(pagenation.PageNumber <= 1)">
+                <i class="bi bi-chevron-right"></i> السابق
+            </button>
+            <span class="badge bg-light text-dark border px-3 py-2">صفحة @pagenation.PageNumber</span>
+            <button class="btn btn-outline-secondary px-3" @onclick="NextPage">
+                التالي <i class="bi bi-chevron-left"></i>
+            </button>
         </div>
     }
 </div>
 
 @if (showRemove)
 {
-    <div class="modal fade show d-block"
-         style="background-color:rgba(0,0,0,.5)">
-
+    <div class="modal fade show d-block" style="background-color:rgba(0,0,0,.5)">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-
                 <div class="modal-header">
-                    <h5>حذف طلب</h5>
-                    <button class="btn-close"
-                            @onclick="closeRemove">
-                    </button>
+                    <h5 class="modal-title">حذف طلب</h5>
+                    <button class="btn-close" @onclick="closeRemove"></button>
                 </div>
 
                 <div class="modal-body">
-
                     <EditForm Model="@checkAccess" OnValidSubmit="RemoveOrder">
-
                         <DataAnnotationsValidator />
                         <ValidationSummary />
 
                         <div class="mb-3">
-                            <label class="form-label">
-                                Password
-                            </label>
-
-                            <input type="password" class="form-control"
-                                         @bind="checkAccess.pass" />
-
+                            <label class="form-label">كلمة المرور التأكيدية</label>
+                            <input type="password" class="form-control" @bind="checkAccess.pass" />
                             <ValidationMessage For="@(() => checkAccess.pass)" />
                         </div>
 
                         <div class="text-end">
-                            <button type="button"
-                                    class="btn btn-secondary me-2"
-                                    @onclick="closeRemove">
-                                Cancel
+                            <button type="button" class="btn btn-secondary me-2" @onclick="closeRemove">
+                                إلغاء
                             </button>
-
-                            <button type="submit"
-                                    class="btn btn-danger">
-                                Delete
+                            <button type="submit" class="btn btn-danger">
+                                حذف
                             </button>
                         </div>
-
                     </EditForm>
-
                 </div>
-
             </div>
         </div>
     </div>
 }
 
-
 @code {
+    string selectedBarberId = "";
+    DateTime? selectedDate = null;
+    bool useDateFilter = false;
 
-    DateTime selectedDate = DateTime.UtcNow;
+    List<BarberMV> barbers = new();
     List<OrderMV> orderMVs = new();
     Pagenation pagenation = new Pagenation { PageNumber = 1, PageSize = 10 };
     bool hideNextButton = false;
-    public async Task LoadData()
-    {
-        orderMVs = await orderService.GetAllOrder(pagenation);
-        hideNextButton = false;
-
-    }
 
     protected override async Task OnInitializedAsync()
     {
+        barbers = await barberService.GetAllBarbers();
         await LoadData();
     }
 
+    private void OnDateChanged(ChangeEventArgs e)
+    {
+        var str = e.Value?.ToString();
+        if (DateTime.TryParse(str, out var dt))
+        {
+            selectedDate = dt;
+            useDateFilter = true;
+        }
+        else
+        {
+            selectedDate = null;
+            useDateFilter = false;
+        }
+    }
 
-    string OrderId =string.Empty;
+    private void ClearDateFilter()
+    {
+        selectedDate = null;
+        useDateFilter = false;
+    }
+
+    public async Task LoadData()
+    {
+        await JS.InvokeVoidAsync("showLoading");
+        DateTime? dateParam = useDateFilter ? selectedDate : null;
+        string? barberParam = string.IsNullOrWhiteSpace(selectedBarberId) ? null : selectedBarberId;
+
+        orderMVs = await orderService.GetFilteredOrders(barberParam, dateParam, pagenation);
+        await JS.InvokeVoidAsync("hideLoading");
+        hideNextButton = false;
+    }
+
+    public async Task ApplyFilter()
+    {
+        pagenation.PageNumber = 1;
+        await LoadData();
+        if (orderMVs.Count == 0)
+        {
+            await JS.InvokeVoidAsync("showToast3", "لا توجد طلبات تطابق معايير الفلترة");
+        }
+    }
+
+    public async Task ResetFilter()
+    {
+        selectedBarberId = "";
+        selectedDate = null;
+        useDateFilter = false;
+        pagenation.PageNumber = 1;
+        await LoadData();
+    }
+
+    string OrderId = string.Empty;
     bool showRemove = false;
     CheckAccess checkAccess = new CheckAccess();
+
     public void OpenRemove(string id)
     {
         OrderId = id;
         checkAccess = new CheckAccess();
-        Console.WriteLine(OrderId);
         showRemove = true;
     }
 
@@ -192,32 +279,33 @@
         showRemove = false;
         await LoadData();
 
-        if(!respons.Status)
+        if (!respons.Status)
         {
-            await JS.InvokeVoidAsync("showToast2",respons.StatusMessage);
+            await JS.InvokeVoidAsync("showToast2", respons.StatusMessage);
             return;
         }
-        await JS.InvokeVoidAsync("showToast",respons.StatusMessage);
-
+        await JS.InvokeVoidAsync("showToast", respons.StatusMessage);
     }
-
 
     public async Task NextPage()
     {
         pagenation.PageNumber++;
-        await LoadData();
-        if (orderMVs.Count == 0)
+        DateTime? dateParam = useDateFilter ? selectedDate : null;
+        string? barberParam = string.IsNullOrWhiteSpace(selectedBarberId) ? null : selectedBarberId;
+        var nextOrders = await orderService.GetFilteredOrders(barberParam, dateParam, pagenation);
+
+        if (nextOrders.Count == 0)
         {
             pagenation.PageNumber--;
-            await LoadData();
             await JS.InvokeVoidAsync("showToast3", "لا توجد المزيد من الطلبات");
             return;
         }
+        orderMVs = nextOrders;
     }
 
     public async Task PreviousPage()
     {
-        if (pagenation.PageNumber == 1)
+        if (pagenation.PageNumber <= 1)
         {
             await JS.InvokeVoidAsync("showToast3", "أنت بالفعل في الصفحة الأولى");
             return;
@@ -226,19 +314,4 @@
         pagenation.PageNumber--;
         await LoadData();
     }
-
-    public async Task SearchByDate()
-    {
-        await JS.InvokeVoidAsync("showLoading");
-        orderMVs = await orderService.GetOrdersByDate(selectedDate);
-        await JS.InvokeVoidAsync("hideLoading");
-
-        if (orderMVs.Count == 0)
-        {
-            await JS.InvokeVoidAsync("showToast3", "لا توجد طلبات لهذا التاريخ");
-            return;
-        }
-        hideNextButton = true;
-    }
-
 }

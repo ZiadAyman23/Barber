@@ -142,6 +142,12 @@ namespace Infrastructer.Service
 
         public async Task Register(RegisterD registerD)
         {
+            
+            var accountCount = await _userManager.Users.CountAsync();
+            
+            if (accountCount >1)
+                throw new Exception("Account count is greater than 1");
+            
             AppUser appUser = new AppUser
             {
                 UserName = registerD.UserName,
@@ -155,6 +161,35 @@ namespace Infrastructer.Service
 
             }
 
+        }
+
+        public async Task ChangePassword(ChangePassword changePassword)
+        {
+            var principal = httpContextAccessor.HttpContext?.User;
+            if (principal == null)
+                throw new KeyNotFoundException("المستخدم غير مسجل");
+
+            var userId = principal.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = !string.IsNullOrEmpty(userId)
+                ? await _userManager.FindByIdAsync(userId)
+                : await _userManager.GetUserAsync(principal);
+
+            if (user == null)
+            {
+                var username = principal.Identity?.Name;
+                if (!string.IsNullOrEmpty(username))
+                    user = await _userManager.FindByNameAsync(username);
+            }
+
+            if (user == null)
+                throw new KeyNotFoundException("تعذر العثور على حساب المستخدم");
+
+            var result = await _userManager.ChangePasswordAsync(user, changePassword.OldPassword, changePassword.NewPassword);
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(" | ", result.Errors.Select(e => e.Description));
+                throw new Exception(errors);
+            }
         }
     }
 }

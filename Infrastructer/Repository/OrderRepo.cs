@@ -80,6 +80,7 @@ namespace Infrastructer.Repository
         async Task<List<Order>> IOrderRepo.GetAllBarberOrders(string BarberID, Pagenation pagenation)
         {
             var data = await dataContext.Orders
+                .Include(e => e.Barber)
                 .Where(e => e.BarberId == BarberID)
                 .OrderByDescending(e => e.Date)
                 .Skip((pagenation.PageNumber - 1) * pagenation.PageSize)
@@ -101,6 +102,31 @@ namespace Infrastructer.Repository
             return data;
         }
 
+        async Task<List<Order>> IOrderRepo.GetFilteredOrders(string? barberId, DateTime? date, Pagenation pagenation)
+        {
+            var query = dataContext.Orders.Include(e => e.Barber).AsNoTracking().AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(barberId))
+            {
+                query = query.Where(e => e.BarberId == barberId);
+            }
+
+            if (date.HasValue)
+            {
+                var start = date.Value.Date;
+                var end = start.AddDays(1);
+                query = query.Where(e => e.Date >= start && e.Date < end);
+            }
+
+            var data = await query
+                .OrderByDescending(e => e.Date)
+                .Skip((pagenation.PageNumber - 1) * pagenation.PageSize)
+                .Take(pagenation.PageSize)
+                .ToListAsync();
+
+            return data;
+        }
+
         async Task<Order> IOrderRepo.GetOrderById(string id)
         {
             var data =await dataContext.Orders.Include(e=>e.Items).Include(e=>e.Barber).AsNoTracking().FirstOrDefaultAsync(e => e.Id== id);
@@ -112,8 +138,16 @@ namespace Infrastructer.Repository
 
         async Task IOrderRepo.UpdateOrder(Order order)
         {
-
-           dataContext.Orders.Update(order);
+            var existingItems = await dataContext.ItemsOrders.Where(x => x.OrderId == order.Id).ToListAsync();
+            if (existingItems.Count != 0)
+            {
+                dataContext.ItemsOrders.RemoveRange(existingItems);
+            }
+            foreach (var item in order.Items)
+            {
+                item.OrderId = order.Id;
+            }
+            dataContext.Orders.Update(order);
             await dataContext.SaveChangesAsync();
         }
     }

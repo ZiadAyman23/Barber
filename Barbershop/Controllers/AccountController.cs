@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Barbershop.Controllers
 {
@@ -13,7 +14,7 @@ namespace Barbershop.Controllers
         }
 
         [HttpPost("login")]
-
+        [EnableRateLimiting("Login")]
         public async Task<IActionResult> Login([FromBody] Login model)
         {
             try
@@ -72,6 +73,31 @@ namespace Barbershop.Controllers
             }
             catch (Exception e)
             { return BadRequest(e.Message); }
+        }
+
+        [Microsoft.AspNetCore.Authorization.Authorize]
+        [HttpPut("changePassword")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePassword changePassword)
+        {
+            if(!ModelState.IsValid)
+            {
+                var errors = string.Join(" | ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+                return BadRequest(new { message = errors });
+            }
+
+            try
+            {
+                await _appUserService.ChangePassword(changePassword);
+                return Ok(new { message = "تم تغيير كلمة المرور بنجاح" });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception e)
+            {
+                return BadRequest(new { message = e.Message });
+            }
         }
 
     }

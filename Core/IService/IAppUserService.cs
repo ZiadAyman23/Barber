@@ -6,5 +6,6 @@
         Task<Tokens> RefreshToken(string refreshToken);
         public Task CheckSecreatKey (CheckAccess secreatKey);
         public Task Register(RegisterD registerD);
+        public Task ChangePassword(ChangePassword changePassword);
     }
 }

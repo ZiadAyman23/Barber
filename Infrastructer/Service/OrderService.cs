@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -25,6 +25,7 @@ namespace Infrastructer.Service
                     id = item.Id,
                     TotalPrice = item.TotalPrice,
                     Date = item.Date,
+                    ClientName = item.ClientName,
                 });
             }
             
@@ -36,6 +37,7 @@ namespace Infrastructer.Service
            Order order1 = new Order();
             order1.BarberId = order.BarberId;
             order1.TotalPrice = order.TotalPrice;
+            order1.ClientName = order.ClientName;
    
             foreach (var item in order.orderItemDs)
             {
@@ -63,6 +65,9 @@ namespace Infrastructer.Service
                     id = item.Id,
                     TotalPrice = item.TotalPrice,
                     Date=item.Date,
+                    ClientName = item.ClientName,   
+                    BarberName = item.Barber?.Name ?? "",
+                    BarberId = item.BarberId,
                 });
             }
             return result;
@@ -77,14 +82,35 @@ namespace Infrastructer.Service
             {
                 result.Add(new OrderMV
                 {
-                    BarberName = item.Barber.Name,
+                    BarberName = item.Barber?.Name ?? "",
+                    BarberId = item.BarberId,
                     id = item.Id,
                     TotalPrice = item.TotalPrice,
                     Date = item.Date,
+                    ClientName = item.ClientName,
                 });
             }
             return result;
 
+        }
+
+        async Task<List<OrderMV>> IOrderService.GetFilteredOrdersAsync(string? barberId, DateTime? date, Pagenation pagenation)
+        {
+            var orders = await orderRepo.GetFilteredOrders(barberId, date, pagenation);
+            List<OrderMV> result = new List<OrderMV>();
+            foreach (var item in orders)
+            {
+                result.Add(new OrderMV
+                {
+                    BarberName = item.Barber?.Name ?? "",
+                    BarberId = item.BarberId,
+                    id = item.Id,
+                    TotalPrice = item.TotalPrice,
+                    Date = item.Date,
+                    ClientName = item.ClientName,
+                });
+            }
+            return result;
         }
 
         async Task<OrderMV> IOrderService.GetOrderAsync(string orderId)
@@ -110,6 +136,7 @@ namespace Infrastructer.Service
                 id = order.Id,
                 TotalPrice = order.TotalPrice,
                 Date = order.Date,
+                ClientName = order.ClientName,
                 Items = itemOrderMVs
             };
 
@@ -130,15 +157,14 @@ namespace Infrastructer.Service
                 {
                     Price = item.Price,
                     Name = item.Name,
+                    
                 });
             }
-
-
+            
             _order.TotalPrice=order.TotalPrice;
             _order.BarberId = order.BarberId;
             _order.Items = itemOrder;
-
-
+            _order.ClientName  = order.ClientName;
             
             await orderRepo.UpdateOrder(_order);
             

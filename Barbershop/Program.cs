@@ -10,6 +10,7 @@ global using Microsoft.AspNetCore.Identity;
 global using Microsoft.EntityFrameworkCore;
 global using Microsoft.IdentityModel.Tokens;
 global using System.Text;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Barbershop
 {
@@ -82,6 +83,17 @@ namespace Barbershop
                 });
             });
 
+            builder.Services.AddRateLimiter(options =>
+            {
+                options.AddSlidingWindowLimiter("Login", limiter =>
+                {
+                    limiter.PermitLimit = 5;
+                    limiter.Window = TimeSpan.FromMinutes(5);
+                    limiter.QueueLimit = 0;
+                    limiter.SegmentsPerWindow = 10;
+                });
+                
+            });
             // Add services for dependency injection
             builder.Services.AddScoped<IAppUserService, AppUserService>();
             builder.Services.AddScoped<IItemService, ItemService>();
@@ -106,7 +118,7 @@ namespace Barbershop
 
             // Configure the HTTP request pipeline.
 
-
+            app.UseRateLimiter();
             app.UseHttpsRedirection();
             app.UseCors("AllowBlazor");
             app.UseStaticFiles();

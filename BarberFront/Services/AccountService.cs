@@ -35,5 +35,37 @@ namespace BarberFront.Services
             var tokens = await respons.Content.ReadFromJsonAsync<Tokens>();
             return tokens ?? new Tokens() ;
         }
+
+        public async Task<APIRespons> ChangePassword(ChangePassword changePassword)
+        {
+            var client = httpClientFactory.CreateClient("API");
+            var response = await client.PutAsJsonAsync("api/Account/changePassword", changePassword);
+            if (response.IsSuccessStatusCode)
+            {
+                return new APIRespons { Status = true, StatusMessage = "تم تغيير كلمة المرور بنجاح" };
+            }
+
+            var content = await response.Content.ReadAsStringAsync();
+            string errorMessage = "";
+            try
+            {
+                var doc = System.Text.Json.JsonDocument.Parse(content);
+                if (doc.RootElement.TryGetProperty("message", out var msgElem))
+                {
+                    errorMessage = msgElem.GetString() ?? "";
+                }
+            }
+            catch
+            {
+                errorMessage = content;
+            }
+
+            if (string.IsNullOrWhiteSpace(errorMessage))
+            {
+                errorMessage = "فشل تغيير كلمة المرور. يرجى التحقق من صحة كلمة المرور الحالية.";
+            }
+
+            return new APIRespons { Status = false, StatusMessage = errorMessage };
+        }
     }
 }

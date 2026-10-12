@@ -274,6 +274,9 @@ namespace Infrastructer.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<string>("ClientName")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("Date")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")

@@ -27,27 +27,35 @@
 
             <div class="row text-center mb-4">
 
-                <div class="col-md-4">
-                    <div class="border rounded p-3">
+                <div class="col-md-3 col-6 mb-3">
+                    <div class="border rounded p-3 h-100 bg-light">
+                        <i class="bi bi-person-circle fs-2 text-info"></i>
+                        <h6 class="mt-2 mb-1 text-muted">العميل</h6>
+                        <h5 class="fw-bold mb-0">@(string.IsNullOrWhiteSpace(orderMV.ClientName) ? "غير محدد" : orderMV.ClientName)</h5>
+                    </div>
+                </div>
+
+                <div class="col-md-3 col-6 mb-3">
+                    <div class="border rounded p-3 h-100 bg-light">
                         <i class="bi bi-person-fill fs-2 text-primary"></i>
-                        <h6 class="mt-2 mb-1">الحلاق</h6>
-                        <h5>@orderMV.BarberName</h5>
+                        <h6 class="mt-2 mb-1 text-muted">الحلاق</h6>
+                        <h5 class="fw-bold mb-0">@orderMV.BarberName</h5>
                     </div>
                 </div>
 
-                <div class="col-md-4">
-                    <div class="border rounded p-3">
+                <div class="col-md-3 col-6 mb-3">
+                    <div class="border rounded p-3 h-100 bg-light">
                         <i class="bi bi-calendar-event fs-2 text-success"></i>
-                        <h6 class="mt-2 mb-1">التاريخ</h6>
-                        <h5>@orderMV.Date.ToString("dd/MM/yyyy")</h5>
+                        <h6 class="mt-2 mb-1 text-muted">التاريخ</h6>
+                        <h5 class="fw-bold mb-0">@orderMV.Date.ToString("dd/MM/yyyy")</h5>
                     </div>
                 </div>
 
-                <div class="col-md-4">
-                    <div class="border rounded p-3">
+                <div class="col-md-3 col-6 mb-3">
+                    <div class="border rounded p-3 h-100 bg-light">
                         <i class="bi bi-cash-stack fs-2 text-warning"></i>
-                        <h6 class="mt-2 mb-1">الإجمالي</h6>
-                        <h4 class="text-success">@orderMV.TotalPrice.ToString("F2") EGP</h4>
+                        <h6 class="mt-2 mb-1 text-muted">الإجمالي</h6>
+                        <h4 class="text-success fw-bold mb-0">@orderMV.TotalPrice.ToString("F2") EGP</h4>
                     </div>
                 </div>
 
@@ -124,7 +132,15 @@
                     <div class="modal-body">
 
                         <div class="mb-3">
-                            <label>الحلاق</label>
+                            <label class="form-label fw-semibold">اسم العميل (اختياري)</label>
+                            <input type="text"
+                                   class="form-control"
+                                   placeholder="أدخل اسم العميل..."
+                                   @bind="order.ClientName" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">الحلاق</label>
 
                             <InputSelect class="form-select"
                                          @bind-Value="order.BarberId">
@@ -267,6 +283,7 @@
         await JS.InvokeVoidAsync("printOrderReceipt", new
         {
             barberName = orderMV.BarberName,
+            clientName = orderMV.ClientName,
             items = orderMV.Items.Select(item => new { name = item.name, price = item.price }),
             total = orderMV.TotalPrice,
             date = orderMV.Date.ToString("dd/MM/yyyy HH:mm")
@@ -282,6 +299,7 @@
         showEditModal = true;
         order.BarberId = orderMV.BarberId;
         order.TotalPrice = orderMV.TotalPrice;
+        order.ClientName = orderMV.ClientName;
         foreach (var item in orderMV.Items)
         {
             order.orderItemDs.Add(new OrderItemD()
@@ -299,6 +317,7 @@
         showEditModal = false;
         showAddService = false;
         order.orderItemDs.Clear();
+        order.ClientName = null;
         checkAccess = new CheckAccess();
     }
 
